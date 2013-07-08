@@ -40,7 +40,6 @@ $(function() {
 		  left: 5,
 	  }
 	});
-
 	vld.start();
 });
 ```
