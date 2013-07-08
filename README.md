@@ -11,7 +11,7 @@
 ### 集合验证
 ```js
 $(function() {
-    validator = new $.Validator([
+    var validator = new $.Validator([
 	    {
 		    field: "text1",
 			rule: "required",
