@@ -1,7 +1,7 @@
 /*
  *validator.js 表单验证器
  *@author：maxiupeng
- *@date:2013-6-20
+ *@date:2013-7-3
  */
 
 (function($) {
@@ -148,7 +148,7 @@
 
         function validate(validation) {
             var field = validation.field;
-            var rules = $.Validator.parseRule(validation.rule);
+            //var rules = $.Validator.parseRule(validation.rule);
             var msg = validation.msg ? validation.msg : opts.defaultMsg;
             var errorLoc = validation.errorLoc;
             var input = $("#" + field)[0];
@@ -181,37 +181,13 @@
             }
 
             //普通验证
-            if (rules.length == 1) {
-                if ($.Validator.rulesTable[rules[0].rule](value, rules[0].args)) {
-                    ok();
-                    return true;
-                } else {
-                    error();
-                    return false;
-                }
+            var rule = validation.rule;
+            if(rule.contains("#")){
+                rule = rule.replace(/#[a-zA-Z0-9_]+/ig,function(val,index,original){
+                    return $(val)[0].value + "";
+                });
             }
-            if (rules[0].rel == "or") {
-                for (var j = 1; j < rules.length; j++) {
-                    if ($.Validator.rulesTable[rules[j].rule](value, rules[j].args)) {
-                        ok();
-                        return true;
-                    }
-                }
-                error();
-                return false;
-            } else if (rules[0].rel == "and") {
-                for (var j = 1; j < rules.length; j++) {
-                    if (!$.Validator.rulesTable[rules[j].rule](value, rules[j].args)) {
-                        error();
-                        return false;
-                    }
-                }
-                ok();
-                return true;
-            } else {
-                console.log("规则错误！");
-                return false;
-            }
+            VldRulesLib.validate(value, rule, "", msg, ok, error);
 
             //验证成功后执行的操作
 
@@ -430,271 +406,6 @@
 
     }
 
-    /*
-     * 验证方法表
-     */
-    $.Validator.rulesTable = {
-        /*
-         * 验证规则：不为空
-         * @param value {string}  待检验的数据
-         * @return      {boolean} 检验结果
-         */
-        required: function(value) {
-            return value.length == 0 ? false : true;
-        },
-
-        /*
-         * 验证规则：最小长度
-         * @param value {string}  待检验的数据
-         * @param value {string}  阈值
-         * @return      {boolean} 检验结果
-         */
-        min: function(value, args) {
-            return value.length >= args ? true : false;
-        },
-
-        /*
-         * 验证规则：最大长度
-         * @param value {string}  待检验的数据
-         * @param value {string}  阈值
-         * @return      {boolean} 检验结果
-         */
-        max: function(value, args) {
-            return value.length <= args ? true : false;
-        },
-
-        /*
-         * 验证规则：email合法性
-         * @param value {string}  待检验的数据
-         * @return      {boolean} 检验结果
-         */
-        email: function(value) {
-            if (value == "") {
-                return true;
-            }
-            return /^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+$/.test(value);
-        },
-        /*
-         * 验证规则：座机号码
-         * @param value {string}  待检验的数据
-         * @return      {boolean} 检验结果
-         */
-        phone: function(value) {
-            if (value == "") {
-                return true;
-            }
-            return /^((\(\d{2,3}\))|(\d{3}\-))?(\(0\d{2,3}\)|0\d{2,3}-)?[1-9]\d{6,7}(\-\d{1,4})?$/.test(value);
-        },
-
-        /*
-         * 验证规则：手机号码
-         * @param value {string}  待检验的数据
-         * @return      {boolean} 检验结果
-         */
-        mobile: function(value) {
-            if (value == "") {
-                return true;
-            }
-            return /^((\(\d{2,3}\))|(\d{3}\-))?1\d{10}$/.test(value);
-        },
-
-        /*
-         * 验证规则：url
-         * @param value {string}  待检验的数据
-         * @return      {boolean} 检验结果
-         */
-        url: function(value) {
-            if (value == "") {
-                return true;
-            }
-            return /^http:\/\/[A-Za-z0-9]+\.[A-Za-z0-9]+[\/=\?%\-&_~`@[\]\':+!]*([^<>\"\"])*$/.test(value);
-        },
-
-        /*
-         * 验证规则：验证是否只包含数字或者字母
-         * @param value {string}  待检验的数据
-         * @return      {boolean} 检验结果
-         */
-        alphanumeric: function(value) {
-            return /^[A-Za-z0-9]*$/.test(value);
-        },
-
-        /*
-         * 验证规则：验证是否只包含数字字母下划线空格
-         * @param value {string}  待检验的数据
-         * @return      {boolean} 检验结果
-         */
-        alphanumeric_space: function(value) {
-            return /^[a-zA-Z0-9_\s]*$/.test(value);
-        },
-
-        /*
-         * 验证规则：验证是否只包含纯数字(可以有小数点或者逗号)
-         * @param value {string}  待检验的数据
-         * @return      {boolean} 检验结果
-         */
-        number: function(value) {
-            return /^[\d.,]*$/.test(value);
-        },
-
-        /*
-         * 验证规则：验证是否只包含纯字母
-         * @param value {string}  待检验的数据
-         * @return      {boolean} 检验结果
-         */
-        alpha: function(value) {
-            return /^[A-Za-z]*$/.test(value);
-        },
-
-        /*
-         * 验证规则：验证是否只包含纯字母、下划线、空格
-         * @param value {string}  待检验的数据
-         * @return      {boolean} 检验结果
-         */
-        alpha_space: function(value) {
-            return /^[A-Za-z_\s]*$/.test(value);
-        },
-
-        /*
-         * 验证规则：验证是否小于某个值或者某个标签的value
-         * @param value {string}  待检验的数据
-         * @param args  {string}  目标值或目标input控件
-         * @return      {boolean} 检验结果
-         */
-        lt: function(value, args) {
-            if (!$.Validator.rulesTable.number(value)) {
-                return false;
-            }
-            if (value == "") {
-                return true;
-            }
-            if (args.indexOf("#") == -1) {
-                return parseFloat(value) < parseFloat(args);
-            }
-            if (!$(args) || !$(args)[0].value) {
-                return false;
-            } else {
-                return parseFloat(value) < parseFloat($(args)[0].value);
-            }
-        },
-
-        /*
-         * 验证规则：验证是否大于某个值或者某个标签的value
-         * @param value {string}  待检验的数据
-         * @param args  {string}  目标值或目标input控件
-         * @return      {boolean} 检验结果
-         */
-        gt: function(value, args) {
-            if (!$.Validator.rulesTable.number(value)) {
-                return false;
-            }
-            if (value == "") {
-                return true;
-            }
-            if (args.indexOf("#") == -1) {
-                return parseFloat(value) > parseFloat(args);
-            }
-            if (!$(args) || !$(args)[0].value) {
-                return false;
-            } else {
-                return parseFloat(value) > parseFloat($(args)[0].value);
-            }
-        },
-
-        /*
-         * 验证规则：验证是否等于某个值或者某个标签的value
-         * @param value {string}  待检验的数据
-         * @param args  {string}  目标值或目标input控件
-         * @return      {boolean} 检验结果
-         */
-        equal: function(value, args) {
-            if (!$.Validator.rulesTable.number(value)) {
-                return false;
-            }
-            if (value == "") {
-                return true;
-            }
-            if (args.indexOf("#") == -1) {
-                return parseFloat(value) == parseFloat(args);
-            }
-            if (!$(args) || !$(args)[0].value) {
-                return false;
-            } else {
-                return parseFloat(value) == parseFloat($(args)[0].value);
-            }
-        },
-
-        /*
-         * 验证规则：验证是否小于等于某个值或者某个标签的value
-         * @param value {string}  待检验的数据
-         * @param args  {string}  目标值或目标input控件
-         * @return      {boolean} 检验结果
-         */
-        le: function(value, args) {
-            if (!$.Validator.rulesTable.number(value)) {
-                return false;
-            }
-            if (value == "") {
-                return true;
-            }
-            if (args.indexOf("#") == -1) {
-                return parseFloat(value) <= parseFloat(args);
-            }
-            if (!$(args) || !$(args)[0].value) {
-                return false;
-            } else {
-                return parseFloat(value) <= parseFloat($(args)[0].value);
-            }
-        },
-
-        /*
-         * 验证规则：验证是否大于等于某个值或者某个标签的value
-         * @param value {string}  待检验的数据
-         * @param args  {string}  目标值或目标input控件
-         * @return      {boolean} 检验结果
-         */
-        ge: function(value, args) {
-            if (!$.Validator.rulesTable.number(value)) {
-                return false;
-            }
-            if (value == "") {
-                return true;
-            }
-            if (args.indexOf("#") == -1) {
-                return parseFloat(value) >= parseFloat(args);
-            }
-            if (!$(args) || !$(args)[0].value) {
-                return false;
-            } else {
-                return parseFloat(value) >= parseFloat($(args)[0].value);
-            }
-        },
-
-        /*
-         * 验证规则：身份证号码
-         * @param value {string}  待检验的数据
-         * @return      {boolean} 检验结果
-         */
-        idCard: function(value){
-            return /(^\d{15}$)|(^\d{17}([0-9]|X)$)/.test(value);
-        },
-
-        /*
-         * 验证规则：验证给定的正则表达式
-         * @param value {string}  待检验的数据
-         * @param args  {string}  用于检验的正则表达式
-         * @return      {boolean} 检验结果
-         */
-        regexp: function(value, args) {
-            if (value == "") {
-                return true;
-            }
-            var reStr = args.match(/^(\/)([\s\S]*)?(\/)([igm]*)$/);
-            var re = new RegExp(reStr[2], reStr[4]);
-            return re.test(value);
-        }
-    };
-
     //获取元素的z-index坐标
     $.Validator.getZIndex = function($elm){
         if($elm[0].tagName == "BODY"){
@@ -761,7 +472,7 @@
         //_this.ele=ele.attr("id");
         var id = ele.attr("id");
 
-        var rules = $.Validator.parseRule(validation.rule);
+        //var rules = $.Validator.parseRule(validation.rule);
         var msg = validation.msg;
         var errorLoc = validation.errorLoc;
         
@@ -797,37 +508,13 @@
             }
 
             //普通验证
-            if (rules.length == 1) {
-                if ( $.Validator.rulesTable[rules[0].rule](value, rules[0].args)) {
-                    ok();
-                    return true;
-                } else {
-                    error();
-                    return false;
-                }
+            var rule = validation.rule;
+            if(rule.contains("#")){
+                rule = rule.replace(/#[a-zA-Z0-9_]+/ig,function(val,index,original){
+                    return $(val)[0].value + "";
+                });
             }
-            if (rules[0].rel == "or") {
-                for (var j = 1; j < rules.length; j++) {
-                    if ( $.Validator.rulesTable[rules[j].rule](value, rules[j].args)) {
-                        ok();
-                        return true;
-                    }
-                }
-                error();
-                return false;
-            } else if (rules[0].rel == "and") {
-                for (var j = 1; j < rules.length; j++) {
-                    if (! $.Validator.rulesTable[rules[j].rule](value, rules[j].args)) {
-                        error();
-                        return false;
-                    }
-                }
-                ok();
-                return true;
-            } else {
-                console.log("规则错误！");
-                return false;
-            }
+            VldRulesLib.validate(value, rule, "", msg, ok, error);
 
             //设置验证通过时的错误信息
 
@@ -1003,42 +690,17 @@
             return true;
         }
 
-        rules = $.Validator.parseRule(data_pattern);
+        //rules = $.Validator.parseRule(data_pattern);
         value = input[0].value;
 
         //验证
-        if (rules.length == 1) {
-            if ( $.Validator.rulesTable[rules[0].rule](value, rules[0].args)) {
-                ok();
-                return true;
-            } else {
-                error();
-                return false;
-            }
+        var rule = data_pattern;
+        if (rule.contains("#")) {
+            rule = rule.replace(/#[a-zA-Z0-9_]+/ig, function(val, index, original) {
+                return $(val)[0].value + "";
+            });
         }
-        if (rules[0].rel == "or") {
-            for (var j = 1; j < rules.length; j++) {
-                if ( $.Validator.rulesTable[rules[j].rule](value, rules[j].args)) {
-                    ok();
-                    return true;
-                }
-            }
-            error();
-            return false;
-        } else if (rules[0].rel == "and") {
-            for (var j = 1; j < rules.length; j++) {
-                if (! $.Validator.rulesTable[rules[j].rule](value, rules[j].args)) {
-                    error();
-                    return false;
-                }
-            }
-            ok();
-            return true;
-        } else {
-            console.log("规则错误！");
-            return false;
-        }
-
+        VldRulesLib.validate(value, rule, "", "", ok, error);
         //验证通过后执行的操作
         function ok(){
             if($.Validator.dpItemsInterval[itemId]){
