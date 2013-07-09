@@ -14,8 +14,9 @@
      *                                 eg:[{
                                          field:'userName',
                                          rule:'required',
-                                          msg:'userName is required!',
-                                          errorLoc:'error_username'
+                                         msg:'userName is required!',
+                                         errorLoc:'error_username',
+                                         dynamicVld:true
                                       },{
                                           ...
                                       }]
@@ -72,7 +73,7 @@
                 }
             }
 
-            //设置limiter、passed属性、hasRel属性
+            //设置limiter、passed属性、hasRel属性、动态验证
             for (var i = 0; i < validations.length; i++) {
                 validations[i].passed = true;
                 if (validations[i].rule.constructor == RegExp || (typeof validations[i].rule) == "function") {
@@ -83,7 +84,17 @@
                 if (validations[i].limiter) {
                     $("#" + validations[i].field).limiter(validations[i].limiter);
                 }
+                if(validations[i].dynamicVld){
+                    setInterval(dynamicCheck, checkInterval, validations[i]);
+                }
             }
+        }
+
+        /*
+         * 动态验证,方便callee识别
+         */
+        function dynamicCheck(vld){
+            validate(vld);
         }
 
         /*
@@ -187,7 +198,14 @@
                     return $(val)[0].value + "";
                 });
             }
-            VldRulesLib.validate(value, rule, "", msg, ok, error);
+            if(arguments.callee.caller == dynamicCheck){
+                var result = VldRulesLib.validate(value, rule, "");
+                if(!result.result){
+                    input.value = result.revisedVal;
+                }
+            }else{
+                VldRulesLib.validate(value, rule, "", msg, ok, error);
+            }
 
             //验证成功后执行的操作
 
@@ -469,10 +487,8 @@
     function validator(ele,validation) {
         validation = $.extend({}, $.fn.validator.defaults,validation);
         var _this = this;
-        //_this.ele=ele.attr("id");
         var id = ele.attr("id");
 
-        //var rules = $.Validator.parseRule(validation.rule);
         var msg = validation.msg;
         var errorLoc = validation.errorLoc;
         

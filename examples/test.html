@@ -19,7 +19,7 @@
 			border:1px solid black;
 			margin-left: auto;
 			margin-right: auto;
-			width:400px;
+			width:440px;
 			background-color: #f0f0f0;
 		}
 		.errorTip{
@@ -27,7 +27,7 @@
 			background-color: #ddffdd;
 		}
 		label{
-			width:160px;
+			width:200px;
 			text-align:right;
 			display:inline-block;
 		}
@@ -80,7 +80,7 @@
 			<input type="text" id="text1" name="text1" placeholder="Input text here..."></input><span id="limiter_text1"></span>
 			<div id="text1_err" class="errorInfo"></div>
 
-			<label for="text2">长度3-10:</label>
+			<label for="text2">长度3-10(动态):</label>
 			<input type="text" id="text2" name="text2" placeholder="Input text here..."></input><span id="limiter_text2"></span>
 			<div id="text2_err" class="errorInfo"></div>
 
@@ -100,24 +100,24 @@
 			<input type="text" id="url" name="url"></input><span id="limiter_url"></span>
 			<div></div>
 
-			<label for="number">数字:</label>
+			<label for="number">数字(动态):</label>
 			<input type="text" id="number" name="number"></input><span id="limiter_number"></span>
 			<div></div>
 
-			<label for="alpha">字母:</label>
+			<label for="alpha">字母(动态):</label>
 			<input type="text" id="alpha" name="alpha"></input><span id="limiter_alpha"></span>
 			<div></div>
 
-			<label for="alpha_space">字母空格:</label>
-			<input type="text" id="alpha_space" name="alpha_space"></input><span id="limiter_alpha_space"></span>
+			<label for="alpha_underline">字母下划线(动态):</label>
+			<input type="text" id="alpha_underline" name="alpha_underline"></input><span id="limiter_alpha_underline"></span>
 			<div></div>
 
-			<label for="alphanumeric">字母数字:</label>
+			<label for="alphanumeric">字母数字(动态):</label>
 			<input type="text" id="alphanumeric" name="alphanumeric"></input><span id="limiter_alphanumeric"></span>
 			<div></div>
 
-			<label for="alphanumeric_space">字母数字空格下划线:</label>
-			<input type="text" id="alphanumeric_space" name="alphanumeric_space"></input><span id="limiter_alphanumeric_space"></span>
+			<label for="alphanumeric_underline">字母数字下划线(动态):</label>
+			<input type="text" id="alphanumeric_underline" name="alphanumeric_underline"></input><span id="limiter_alphanumeric_underline"></span>
 			<div></div>
 
 			<label for="lt">小于:</label>
@@ -138,6 +138,18 @@
 
 			<label for="ge">大于等于:</label>
 			<input type="text" id="ge" name="ge"></input><span id="limiter_ge"></span>
+			<div></div>
+
+			<label for="only">只包含(动态):</label>
+			<input type="text" id="only" name="only"></input><span id="limiter_only"></span>
+			<div></div>
+
+			<label for="exclude">不包含(动态):</label>
+			<input type="text" id="exclude" name="exclude"></input><span id="limiter_only"></span>
+			<div></div>
+
+			<label for="trad2simp">繁简转换(动态):</label>
+			<input type="text" id="trad2simp" name="trad2simp"></input><span id="limiter_only"></span>
 			<div></div>
 
 			<label for="regexp">正则表达式:</label>
@@ -220,10 +232,11 @@
 			<input type="button" id="dp_submit" value="提交"/>
 		</div>
 
-		<script type="text/javascript" src="../lib/jquery-1.10.1.js"></script>
-		<script type="text/javascript" src="../lib/mustache.js"></script>
-		<script type="text/javascript" src="../lib/limiter.js"></script>
-		<script type="text/javascript" src="../validator.js"></script>
+		<script type="text/javascript" src="jquery-1.10.1.js"></script>
+		<script type="text/javascript" src="mustache.js"></script>
+		<script type="text/javascript" src="limiter.js"></script>
+		<script type="text/javascript" src="VldRulesLib.js"></script>
+		<script type="text/javascript" src="validator.js"></script>
 		<script type="text/javascript" src="test.js"></script>
 	</body>
 </html>

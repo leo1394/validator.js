@@ -29,7 +29,8 @@ $(function() {
             limiter: {
                 wrapper: "#limiter_text1",
                 max: 10
-            }
+            },
+            dynamicVld:true
         }, {
             field: "text2",
             rule: "min[3]&max[10]",
@@ -40,7 +41,8 @@ $(function() {
             limiter: {
                 wrapper: "#limiter_text2",
                 max: 10
-            }
+            },
+            dynamicVld:true
         }, {
             field: "email",
             rule: "required&email&max[20]",
@@ -67,23 +69,28 @@ $(function() {
         }, {
             field: "number",
             rule: "required&number",
-            msg: "只能是数字"
+            msg: "只能是数字",
+            dynamicVld:true
         }, {
             field: "alpha",
             rule: "required&alpha",
-            msg: "只能是字母"
+            msg: "只能是字母",
+            dynamicVld:true
         }, {
-            field: "alpha_space",
-            rule: "required&alpha_space",
-            msg: "只能是字母或空格"
+            field: "alpha_underline",
+            rule: "required&alpha_underline",
+            msg: "只能是字母或空格",
+            dynamicVld:true
         }, {
             field: "alphanumeric",
             rule: "required&alphanumeric",
-            msg: "只能是数字或字母"
+            msg: "只能是数字或字母",
+            dynamicVld:true
         }, {
-            field: "alphanumeric_space",
-            rule: "required&alphanumeric_space",
-            msg: "只能是数字、字母、空格、下划线"
+            field: "alphanumeric_underline",
+            rule: "required&alphanumeric_underline",
+            msg: "只能是数字、字母、空格、下划线",
+            dynamicVld:true
         }, {
 
             field: "lt",
@@ -106,6 +113,21 @@ $(function() {
             rule: "required&ge[#gt]",
             msg: "必须大于等于'大于'的值"
         }, {
+            field: "only",
+            rule: "only[a-zA-Z0-9.,:!@#$%^&*()\\\'\"]&required",
+            msg: "必须填入指定字符",
+            dynamicVld: true
+        },{
+            field: "exclude",
+            rule: "exclude[a-zA-Z0-9.,:!@#$%^&*()\\\'\"]&required",
+            msg: "不能填入非法字符，且不能为空",
+            dynamicVld: true
+        },{
+            field: "trad2simp",
+            rule: "trad2simp&required",
+            msg: "包含繁体字",
+            dynamicVld: true
+        },{
             field: "regexp",
             rule: /word/ig,
             msg: "不满足自定义的正则表达式"
