@@ -133,6 +133,7 @@ An example of traditional usage is as following:
            top: //top offset to the original location of error tip
            left: //left offset to the original location of error tip
        },
+	   dynamicVld: //whether trigger dynamic validation or not
        errorClass: //CSS class name which will be applied to the input label when the validation fails,
        errTipTpl: //template for error tip
        errorLoc: //id of a DOM element which will show the error messages 

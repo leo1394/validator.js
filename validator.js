@@ -195,7 +195,7 @@
             var rule = validation.rule;
             if(rule.contains("#")){
                 rule = rule.replace(/#[a-zA-Z0-9_]+/ig,function(val,index,original){
-                    return $(val)[0].value + "";
+                    return "0" + $(val)[0].value + "";
                 });
             }
             if(arguments.callee.caller == dynamicCheck){
@@ -380,50 +380,7 @@
         tip.offset(result);
     }
 
-    /*
-     * 规则解析函数，将复合规则解析成object
-     * @param:rule        {string} 规则语句
-     * @return:results {array}  第一个元素表示规则之间的关系，or或者and；剩余元素为独立的规则。
-     *                          如果是单一规则，则直接返回包含该规则的单元素数组
-     *                          eg:[{rel:or},{rule:min,args:5},{rule:max,args:10}]
-     */
-
-    $.Validator.parseRule = function(rule) {
-        if (rule.constructor == RegExp || typeof rule == "function") {
-            return null;
-        }
-        var results = [];
-        var rules = [];
-        if (rule.indexOf("&") != -1) {
-            rules = rule.split("&");
-            results.push({
-                rel: "and"
-            });
-        } else if (rule.indexOf("|") != -1) {
-            rules = rule.split("|");
-            results.push({
-                rel: "or"
-            })
-        } else {
-            rules.push(rule);
-        }
-        for (var i = 0; i < rules.length; i++) {
-            var temp = rules[i].match(/(\w+)(\[([\s\S]+)\])?/);
-            var name = temp[1];
-            var args = temp[3];
-            if (!$.Validator.rulesTable[name]) {
-                console.log("规则错误！");
-                return false;
-            }
-            results.push({
-                rule: name,
-                args: args
-            });
-        }
-        return results;
-
-    }
-
+    
     //获取元素的z-index坐标
     $.Validator.getZIndex = function($elm){
         if($elm[0].tagName == "BODY"){
@@ -472,6 +429,7 @@
      *                                        top:
      *                                        left:
      *                                    },
+     *                                    dynamicVld:true,
      *                                    errorClass:错误时input标签应用的css样式,
      *                                    errTipTpl:错误Tip模板
      *                                    errorLoc:显示错误信息的DOM元素ID
@@ -530,7 +488,14 @@
                     return $(val)[0].value + "";
                 });
             }
-            VldRulesLib.validate(value, rule, "", msg, ok, error);
+            if(arguments.callee.caller == dynamicCheck){
+                var result = VldRulesLib.validate(value, rule, "", msg);
+                if(!result.result){
+                    ele[0].value = result.revisedVal;
+                }
+            } else {
+                VldRulesLib.validate(value, rule, "", msg, ok, error);
+            }
 
             //设置验证通过时的错误信息
 
@@ -585,7 +550,7 @@
             }
         }
 
-        this.check = function(){
+        _this.check = function(){
             if(validation.interval){
                 validation.interval = null;
                 window.clearInterval(validation.interval);
@@ -607,6 +572,16 @@
                 $(elm).bind(validation.trigger[i].event,_this.check);
             }
         }
+
+        if(validation.dynamicVld) {
+            setInterval(dynamicCheck, checkInterval);
+        }
+
+        function dynamicCheck(vld){
+            _this.validate();
+        }
+
+
     }
 
     //默认参数
@@ -617,6 +592,7 @@
             top: 0,
             left: 0
         },
+        dynamicVld: false,
         errTipTpl: "<div class='errorTip' id='{{id}}' style='z-index:{{zindex}};position:absolute;'>{{message}}</div>",
         msg: "输入有误，请重新输入"
     }
