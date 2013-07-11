@@ -193,7 +193,7 @@
 
             //普通验证
             var rule = validation.rule;
-            if(rule.contains("#")){
+            if(rule.indexOf("#") != -1){
                 rule = rule.replace(/#[a-zA-Z0-9_]+/ig,function(val,index,original){
                     return "0" + $(val)[0].value + "";
                 });
@@ -483,7 +483,7 @@
 
             //普通验证
             var rule = validation.rule;
-            if(rule.contains("#")){
+            if(rule.indexOf("#") != -1){
                 rule = rule.replace(/#[a-zA-Z0-9_]+/ig,function(val,index,original){
                     return $(val)[0].value + "";
                 });
@@ -687,7 +687,7 @@
 
         //验证
         var rule = data_pattern;
-        if (rule.contains("#")) {
+        if (rule.indexOf("#") != -1) {
             rule = rule.replace(/#[a-zA-Z0-9_]+/ig, function(val, index, original) {
                 return $(val)[0].value + "";
             });
