@@ -33,26 +33,38 @@ var VldRulesLib = {
         E421: "数据不可用",
         E422: "包含了指定字符以外的字符",
         E423: "包含了指定的字符",
-        E424: "包含繁体字符"
+        E424: "包含繁体字符",
+        E425: "非整数",
+        E426: "非小数",
+        E427: "密码安全级别不够,至少包含数字和字母",
+        E428: "密码安全级别不够,至少包含数字和大小写字母",
+        E429: "密码安全级别不够,至少包含数字、大小写字母、符号",
+        E430: "包含多个空格"
     },
 
     //检测value是否为空，args是否为数字
-    checkValueArgs: function(value, args) {
+    checkValueArgs: function(value, args, msg1, msg2) {
         var result = {};
         if (value == "") {
             result.result = true;
+            result.revisedVal = value;
             result.code = "E201";
-            result.msg = "";
+            result.msg = msg1;
+            return result;
         }
-        if (args.length == 0 || !/^[\d.,]*$/.test(args)) {
+        if (args.length == 0 || !/^[\d.-]*$/.test(args)) {
             result.result = false;
+            result.revisedVal = value;
             result.code = "E416";
-            result.msg = "";
+            result.msg = msg2;
+            return result;
         }
-        if (!/^[\d.]*$/.test(value)) {
+        if (!/^[\d.-]*$/.test(value)) {
             result.result = false;
+            result.revisedVal = value.replace(/[^\d.-]/ig, "");
             result.code = "E404";
-            result.msg = "";
+            result.msg = msg2;
+            return result;
         }
         return result;
     },
@@ -77,6 +89,7 @@ var VldRulesLib = {
                 result.result = false,
                 result.code = "E401",
                 result.msg = msg2
+                return result;
             }
             if (typeof value != "boolean") {
                 result.result = false;
@@ -295,15 +308,139 @@ var VldRulesLib = {
                 result.result = true;
                 result.code = "E201";
                 result.msg = msg1;
-            } else if (/^[\d.]*$/.test(value)) {
+            } else if (/^-?[\d\.]*$/.test(value)) {
                 result.result = true;
                 result.code = "E200";
                 result.msg = msg1;
             } else {
                 result.result = false;
-                result.revisedVal = value.replace(/[^\d.]/ig, "");
+                var newVal = value.replace(/[^\d\.-]/ig, "");
+                newVal = newVal.charAt(0) + newVal.substr(1, newVal.length - 1).replace(/-/g, "");
+                result.revisedVal = newVal;
                 result.code = "E404";
                 result.msg = msg2;
+            }
+            return result;
+        },
+
+        int: function(value, args, msg1, msg2) {
+            var result = {};
+            result.revisedVal = value;
+            if (value == "") {
+                result.result = true;
+                result.code = "E201";
+                result.msg = msg1;
+            } else if (/^-?[\d]*$/.test(value)) {
+                result.result = true;
+                result.code = "E200";
+                result.msg = msg1;
+            } else {
+                result.result = false;
+                var newVal = value.replace(/[^\d-]/ig, "");
+                newVal = newVal.charAt(0) + newVal.substr(1, newVal.length - 1).replace(/-/g, "");
+                result.revisedVal = newVal;
+                result.code = "E425";
+                result.msg = msg2;
+            }
+            return result;
+        },
+
+        float: function(value, args, msg1, msg2) {
+            var result = {};
+            result.revisedVal = value;
+            if (value == "") {
+                result.result = true;
+                result.code = "E201";
+                result.msg = msg1;
+            } else if (/^-?[\d]*\.[\d]+$/g.test(value)) {
+                result.result = true;
+                result.code = "E200";
+                result.msg = msg1;
+            } else {
+                result.result = false;
+                var newVal = value.replace(/[^\d-\.]/ig, "");
+                newVal = newVal.charAt(0) + newVal.substr(1, newVal.length - 1).replace(/-/g, "");
+                result.revisedVal = newVal;
+                result.code = "E426";
+                result.msg = msg2;
+            }
+            return result;
+        },
+
+        //第1级别,包含字母,数字
+        pwdL1: function(value, args, msg1, msg2) {
+            var result = {};
+            result.revisedVal = value;
+            var re1 = /[a-zA-Z]+/g;
+            var re2 = /[0-9]+/g;
+            if (re1.test(value) && re2.test(value)) {
+                result.result = true;
+                result.code = "E200";
+                result.msg = msg1;
+            } else {
+                result.result = false;
+                result.code = "E427";
+                result.msg = msg2;
+            }
+            return result;
+        },
+        //第2级别,包含大小写字母,数字
+        pwdL2: function(value, args, msg1, msg2) {
+            var result = {};
+            result.revisedVal = value;
+            var re1 = /[a-z]+/g;
+            var re2 = /[A-Z]+/g;
+            var re3 = /[0-9]+/g;
+            if (re1.test(value) && re2.test(value) && re3.test(value)) {
+                result.result = true;
+                result.code = "E200";
+                result.msg = msg1;
+            } else {
+                result.result = false;
+                result.code = "E428";
+                result.msg = msg2;
+            }
+            return result;
+        },
+        //第3级别,包含大小写字母,数字,符号
+        pwdL3: function(value, args, msg1, msg2) {
+            var result = {};
+            result.revisedVal = value;
+            var re1 = /[a-z]+/g;
+            var re2 = /[A-Z]+/g;
+            var re3 = /[0-9]+/g;
+            var re4 = /[~!@#$%^&*()_+=\-`\{\}|:\"<>\?\[\]\\;\',\.\/]+/g;
+            if (re1.test(value) && re2.test(value) && re3.test(value) && re4.test(value)) {
+                result.result = true;
+                result.code = "E200";
+                result.msg = msg1;
+            } else {
+                result.result = false;
+                result.code = "E429";
+                result.msg = msg2;
+            }
+            return result;
+        },
+
+        //是否只包含单一空格,多个连续空格合并成一个
+        singleSpace: function(value, args, msg1, msg2) {
+            var result = {};
+            result.revisedVal = value;
+            var re = /[\s]{2,}/g;
+            if(value == ""){
+                result.result = true;
+                result.code = "E201";
+                result.msg = msg1;
+            }
+            if(re.test(value)){
+                result.result = false;
+                result.revisedVal = value.replace(re," ");
+                result.code = "E430"
+                result.msg = msg2;
+            } else {
+                result.result = true;
+                result.code = "E200";
+                result.msg = msg1;
             }
             return result;
         },
@@ -349,11 +486,11 @@ var VldRulesLib = {
         },
 
         lt: function(value, args, msg1, msg2) {
-            var result = VldRulesLib.checkValueArgs(value, args);
-            result.revisedVal = value;
+            var result = VldRulesLib.checkValueArgs(value, args, msg1, msg2);
             if (result.result !== undefined) {
                 return result;
             }
+            result.revisedVal = value;
             if (parseFloat(value) < parseFloat(args)) {
                 result.result = true;
                 result.code = "E200";
@@ -367,11 +504,11 @@ var VldRulesLib = {
         },
 
         gt: function(value, args, msg1, msg2) {
-            var result = VldRulesLib.checkValueArgs(value, args);
-            result.revisedVal = value;
+            var result = VldRulesLib.checkValueArgs(value, args, msg1, msg2);
             if (result.result !== undefined) {
                 return result;
             }
+            result.revisedVal = value;
             if (parseFloat(value) > parseFloat(args)) {
                 result.result = true;
                 result.code = "E200";
@@ -385,11 +522,11 @@ var VldRulesLib = {
         },
 
         equal: function(value, args, msg1, msg2) {
-            var result = VldRulesLib.checkValueArgs(value, args);
-            result.revisedVal = value;
+            var result = VldRulesLib.checkValueArgs(value, args, msg1, msg2);
             if (result.result !== undefined) {
                 return result;
             }
+            result.revisedVal = value;
             if (parseFloat(value) == parseFloat(args)) {
                 result.result = true;
                 result.code = "E200";
@@ -403,11 +540,11 @@ var VldRulesLib = {
         },
 
         le: function(value, args, msg1, msg2) {
-            var result = VldRulesLib.checkValueArgs(value, args);
-            result.revisedVal = value;
+            var result = VldRulesLib.checkValueArgs(value, args, msg1, msg2);
             if (result.result !== undefined) {
                 return result;
             }
+            result.revisedVal = value;
             if (parseFloat(value) <= parseFloat(args)) {
                 result.result = true;
                 result.code = "E200";
@@ -421,11 +558,11 @@ var VldRulesLib = {
         },
 
         ge: function(value, args, msg1, msg2) {
-            var result = VldRulesLib.checkValueArgs(value, args);
-            result.revisedVal = value;
+            var result = VldRulesLib.checkValueArgs(value, args, msg1, msg2);
             if (result.result !== undefined) {
                 return result;
             }
+            result.revisedVal = value;
             if (parseFloat(value) >= parseFloat(args)) {
                 result.result = true;
                 result.code = "E200";
@@ -474,7 +611,6 @@ var VldRulesLib = {
             args = args.replace(/a-z/g, "abcdefghijklmnopqrstuvwxyz");
             args = args.replace(/A-Z/g, "ABCDEFGHIJKLMNOPQRSTUVWXYZ");
             args = args.replace(/0-9/g, "0123456789");
-            console.log(args);
             var re = new RegExp("[^" + args + "]", "g");
             if (!re.test(value)) {
                 result.result = true;
@@ -502,7 +638,6 @@ var VldRulesLib = {
             args = args.replace(/a-z/g, "abcdefghijklmnopqrstuvwxyz");
             args = args.replace(/A-Z/g, "ABCDEFGHIJKLMNOPQRSTUVWXYZ");
             args = args.replace(/0-9/g, "0123456789");
-            console.log(args);
             var re = new RegExp("[" + args + "]", "g");
             if (!re.test(value)) {
                 result.result = true;
@@ -551,11 +686,14 @@ var VldRulesLib = {
             return result;
         },
         regexp: function(value, args, msg1, msg2) {
-            var result = VldRulesLib.checkValueArgs(value, args);
+            var result = {};
             result.revisedVal = value;
-            if (result.result) {
-                return result;
-            }
+            // if(value == ""){
+            //     result.result = true;
+            //     result.code = "E201";
+            //     result.msg = msg1;
+            //     return 
+            // }
             var re = eval(args);
             if (!re instanceof RegExp) {
                 result.result = false;
@@ -633,20 +771,35 @@ var VldRulesLib = {
      *                                 {string}  msg    附加消息,多个消息之间用&连接
      */
     validate: function(value, rule, msg1, msg2, success, fail) {
-        var rules = this.parseRule(rule);
-        var results = {
-            result: false,
-            revisedVal: "",
-            code: "",
-            msg: ""
-        };
-
         if (typeof success != "function") {
-            success = $.noop;
+            success = function() {};
         }
         if (typeof fail != "function") {
-            fail = $.noop;
+            fail = function() {};
         }
+
+        if(rule instanceof RegExp){
+            var results = {};
+            if(rule.test(value)){
+                results.result = true;
+                results.revisedVal = value;
+                results.code = "E200";
+                results.msg = this.CODE_TABLE[results.code] + "," + msg1;
+            } else {
+                results.result = false;
+                results.revisedVal = value;
+                results.code = "E417";
+                results.msg = this.CODE_TABLE[results.code] + "," + msg2;
+            }
+            return results;
+        }
+
+        var rules = this.parseRule(rule);
+        var results = {};
+        results.result = false;
+        results.revisedVal = "";
+        results.code = "";
+        results.msg = "";
 
         if (!rules) {
             return false;
@@ -665,7 +818,7 @@ var VldRulesLib = {
             return results;
         }
         if (rules[0].rel == "or") {
-            for (var j = 1, len = rules.length; j < len; j++) {
+            for (var j = 1; j < rules.length; j++) {
                 var result = this.rulesTable[rules[j].rule](value, rules[j].args, msg1, msg2);
                 if (result.result) {
                     results.result = result.result;
@@ -722,6 +875,7 @@ var VldRulesLib = {
             success(value, rule, results);
             return results;
         } else {
+            console.log("规则错误！");
             return false;
         }
     },

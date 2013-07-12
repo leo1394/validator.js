@@ -28,8 +28,9 @@
         var hasRel = false; //各个field之间是否存在关联性
         var relations = {}; //储存各field之间的关联
         var _this = this;
+        var dynamicVlds = []; //需要动态验证的validation列表
         if (validations.length == 0) return true;
-
+        
         /*
          * 启动
          */
@@ -85,9 +86,31 @@
                     $("#" + validations[i].field).limiter(validations[i].limiter);
                 }
                 if(validations[i].dynamicVld){
-                    setInterval(dynamicCheck, checkInterval, validations[i]);
+                    dynamicVlds.push(validations[i]);
                 }
+                
             }
+
+            //设置定时器
+            if(dynamicVlds.length != 0){
+                setInterval(function(){
+                    for(var i = 0; i < dynamicVlds.length; i++){
+                        dynamicCheck(dynamicVlds[i]);
+                    }
+                }, checkInterval);
+            }
+            if(opts.checkOnError)
+            setInterval(function(){
+                for(var i = 0; i < validations.length; i++){
+                    if(validations[i].onError){ //onError专用于定时验证,不用passed是为了焦点不离开输入框时不取消定时器
+                        if(hasRel){
+                            validateRel(validations[i]);
+                        }else{
+                            validate(validation[i]);
+                        }
+                    }
+                }
+            }, checkInterval);
         }
 
         /*
@@ -231,6 +254,7 @@
 
             function error() {
                 validation.passed = false;
+                validation.onError = true;
                 if (errorLoc) {
                     if (errorLoc.indexOf('#') != -1) {
                         $(errorLoc).html(msg);
@@ -241,11 +265,6 @@
                     errorMsg[field] = msg;
                 }
                 $("#" + field).addClass(opts.errorClass);
-                if(opts.checkOnError){
-                    if(!validation.interval){
-                        validation.interval = setInterval(checkValue,checkInterval,validation);
-                    }
-                }
 
                 if (tipDir || opts.tipDir) {
                     $("#" + field + "_errTip").remove();
@@ -269,9 +288,8 @@
          */
 
         function check(e) {
-            if(validations[e.data.index].interval){
-                validations[e.data.index].interval = null;
-                window.clearInterval(validations[e.data.index].interval);
+            if(validations[e.data.index].onError){
+                validations[e.data.index].onError = false;
             }
             if (hasRel == false) {
                 return validate(validations[e.data.index]);
@@ -280,18 +298,6 @@
             }
         }
 
-        /*
-         * 用于定时检验input的value函数
-         * @param validation {object} 验证设置
-         */
-
-        function checkValue(validation) {
-            if (hasRel == false) {
-                return validate(validation);
-            } else {
-                return validateRel(validation);
-            }
-        }
 
         /*
          * 集中显示错误信息

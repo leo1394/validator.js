@@ -111,7 +111,8 @@ $(function() {
         }, {
             field: "ge",
             rule: "required&ge[#gt]",
-            msg: "必须大于等于'大于'的值"
+            msg: "必须大于等于'大于'的值",
+            dynamicVld: true
         }, {
             field: "only",
             rule: "only[a-zA-Z0-9.,:!@#$%^&*()\\\'\"]&required",
@@ -151,7 +152,8 @@ $(function() {
         trigger: [{
             elm: "#submit2",
             event: "mousemove"
-        }]
+        }],
+        timer:false
         //listenScroll:false,
     });
 
@@ -187,7 +189,8 @@ $(function() {
     var t2 = $("#sText2").validator({
         rule: "required&min[3]&max[10]",
         errorClass: "error",
-        parent: ".popup"
+        parent: ".popup",
+        dynamicVld: true
     });
     var t3 = $("#sText3").validator({
         rule: /word/ig,

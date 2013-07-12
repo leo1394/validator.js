@@ -31,6 +31,9 @@
 			text-align:right;
 			display:inline-block;
 		}
+		.popButton{
+			text-align: center;
+		}
 		.popup{
 			width:700px;
 			position:absolute;
@@ -46,9 +49,7 @@
 			float:right;
 		}
 		#popup{
-			display: block;
-			margin-left: auto;
-			margin-right:auto;
+			
 		}
 		.errmsg{
 			display:none;
@@ -136,7 +137,7 @@
 			<input type="text" id="le" name="le"></input><span id="limiter_le"></span>
 			<div></div>
 
-			<label for="ge">大于等于:</label>
+			<label for="ge">大于等于(动态):</label>
 			<input type="text" id="ge" name="ge"></input><span id="limiter_ge"></span>
 			<div></div>
 
@@ -170,7 +171,9 @@
 			
 		</div>
 		<br/>
-		<input type="button" id="popup" value="弹窗"/>
+		<div class="popButton">
+			<input type="button" id="popup" value="弹窗"/>
+		</div>
 		<br/>
 		<div class="popup">
 			<div class="outer">
@@ -232,10 +235,10 @@
 			<input type="button" id="dp_submit" value="提交"/>
 		</div>
 
-		<script type="text/javascript" src="../lib/jquery-1.10.1.js"></script>
-		<script type="text/javascript" src="../lib/mustache.js"></script>
-		<script type="text/javascript" src="../lib/limiter.js"></script>
-		<script type="text/javascript" src="../lib/VldRulesLib.js"></script>
+		<script type="text/javascript" src="../libs/jquery-1.10.1.js"></script>
+		<script type="text/javascript" src="../libs/mustache.js"></script>
+		<script type="text/javascript" src="../libs/limiter.js"></script>
+		<script type="text/javascript" src="../libs/VldRulesLib.js"></script>
 		<script type="text/javascript" src="../validator.js"></script>
 		<script type="text/javascript" src="test.js"></script>
 	</body>
