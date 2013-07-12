@@ -7,6 +7,22 @@
 (function($) {
 
     var checkInterval = 100;
+
+    //debug
+    var delegate = false;
+
+    /*
+     * 获取浏览器类型
+     */
+    var browser = {};
+    var ua = navigator.userAgent.toLowerCase();
+    var s;
+    (s = ua.match(/msie ([\d.]+)/)) ? browser.ie = s[1] :
+        (s = ua.match(/firefox\/([\d.]+)/)) ? browser.firefox = s[1] :
+        (s = ua.match(/chrome\/([\d.]+)/)) ? browser.chrome = s[1] :
+        (s = ua.match(/opera.([\d.]+)/)) ? browser.opera = s[1] :
+        (s = ua.match(/version\/([\d.]+).*safari/)) ? browser.safari = s[1] : 0;
+
     $.Validator = {};
     /*
      * validator 定义
@@ -92,25 +108,105 @@
             }
 
             //设置定时器
-            if(dynamicVlds.length != 0){
-                setInterval(function(){
-                    for(var i = 0; i < dynamicVlds.length; i++){
-                        dynamicCheck(dynamicVlds[i]);
-                    }
-                }, checkInterval);
-            }
-            if(opts.checkOnError)
-            setInterval(function(){
-                for(var i = 0; i < validations.length; i++){
-                    if(validations[i].onError){ //onError专用于定时验证,不用passed是为了焦点不离开输入框时不取消定时器
-                        if(hasRel){
-                            validateRel(validations[i]);
-                        }else{
-                            validate(validation[i]);
+            if (opts.timer) {
+                if (dynamicVlds.length != 0) {
+                    setInterval(function() {
+                        for (var i = 0; i < dynamicVlds.length; i++) {
+                            dynamicCheck(dynamicVlds[i]);
                         }
+                    }, checkInterval);
+                }
+                //出错时检验的定时器
+                if (opts.checkOnError) {
+                    setInterval(function() {
+                        for (var i = 0; i < validations.length; i++) {
+                            if (validations[i].onError) { //onError专用于定时验证,不用passed是为了焦点不离开输入框时不取消定时器
+                                if (hasRel) {
+                                    validateRel(validations[i]);
+                                } else {
+                                    validate(validation[i]);
+                                }
+                            }
+                        }
+                    }, checkInterval);
+                }
+            } else { //keydown和paste代替timer
+                for (var i = 0; i < validations.length; i++) {
+                    if(validations[i].dynamicVld){
+                        dynamicVld(validations[i]);
                     }
                 }
-            }, checkInterval);
+            }
+
+        }
+
+        /*
+         * 动态验证
+         */
+        function dynamicVld(vld){
+            if(browser.ie){//IE
+                if(delegate){
+                    //delegate
+                    $(document).delegate("#" + vld.field, "keydown", function(e) {
+                        setTimeout(function() {
+                            dynamicCheck(getValidation(e.target.id));
+                        }, 0);
+                    });
+                } else {
+                    //on
+                    $("#" + vld.field).on("keydown",function(e) {
+                        setTimeout(function() {
+                            dynamicCheck(getValidation(e.target.id));
+                        }, 0);
+                    });
+                }
+            } else {//非IE
+                if(delegate){
+                    //delegate
+                    $(document).delegate("#" + vld.field, "input", function(e) {
+                        setTimeout(function() {
+                            dynamicCheck(getValidation(e.target.id));
+                        }, 0);
+                    });
+                } else {
+                    //on
+                    $("#" + vld.field).on("input",function(e) {
+                        setTimeout(function() {
+                            dynamicCheck(getValidation(e.target.id));
+                        }, 0);
+                    });
+                }
+                
+            }
+            
+            if(delegate){
+                //delegate
+                $(document).delegate("#" + vld.field, "paste",function(e){
+                    setTimeout(function(){
+                        dynamicCheck(getValidation(e.target.id));
+                    }, 0);
+                });
+            } else {
+                //on
+                $("#" + vld.field).on("paste",function(e){
+                    setTimeout(function(){
+                        dynamicCheck(getValidation(e.target.id));
+                    }, 0);
+                });
+            }
+            
+        }
+
+        /*
+         * 根据元素id从validations获取其对应的validation
+         */
+        function getValidation(id){
+            for(var i = 0, len = validations.length; i < len; i++){
+                if(validations[i].field == id){
+                    return validations[i];
+                }
+            }
+            return null;
         }
 
         /*
@@ -266,6 +362,60 @@
                 }
                 $("#" + field).addClass(opts.errorClass);
 
+                if(opts.checkOnError && !opts.timer && !validation.binded){
+                    validation.binded = true;
+                    if(browser.ie){//IE
+                        if(delegate){
+                            //delegate
+                            $(document).delegate("#" + field, "keydown", function(e) {
+                                setTimeout(function() {
+                                    checkOnError(e);
+                                }, 0);
+                            });
+                        } else {
+                            //on
+                            $("#" + field).on("keydown", function(e) {
+                                setTimeout(function() {
+                                    checkOnError(e);
+                                }, 0);
+                            });
+                        }
+                        
+                    } else {//非IE
+                        if(delegate){
+                            //delegate
+                            $(document).delegate("#" + field, "input", function(e) {
+                                setTimeout(function() {
+                                    checkOnError(e);
+                                }, 0);
+                            });
+                        } else {
+                            //on
+                            $("#" + field).on("input", function(e) {
+                                setTimeout(function() {
+                                    checkOnError(e);
+                                }, 0);
+                            });
+                        }
+                    }
+                    
+                    if(delegate){
+                        //delegate
+                        $(document).delegate("#" + field, "paste", function(e) {
+                            setTimeout(function() {
+                                checkOnError(e);
+                            }, 0);
+                        });
+                    } else {
+                        //on
+                        $("#" + field).on("paste", function(e) {
+                            setTimeout(function() {
+                                checkOnError(e);
+                            }, 0);
+                        });
+                    }
+                }
+
                 if (tipDir || opts.tipDir) {
                     $("#" + field + "_errTip").remove();
                     var errTip = $(Mustache.render(opts.errTipTpl, {
@@ -296,6 +446,12 @@
             } else {
                 return validateRel(validations[e.data.index]);
             }
+        }
+
+        function checkOnError(e){
+            var vld = getValidation(e.target.id);
+            //vld.binded = true;
+            validate(vld);
         }
 
 
@@ -406,6 +562,7 @@
         vldOnBlur: false, //元素失去焦点时验证
         vldOnEnter: false, //input中按下enter时验证
         checkOnError: true, //当前input内的数据不合法时自动验证数据
+        timer: true, //是否使用定时器验证，若否，使用keydown和onpaste代替
         errorFiled: null, //集中显示错误信息的区域。
         errorClass: "", //错误时input标签应用的css样式
         errTipTpl: "<div class='errorTip' id='{{id}}' style='z-index:{{zindex}};position:absolute;'>{{message}}</div>", //错误Tip模板
@@ -430,6 +587,7 @@
      *                                       ...
      *                                    }],
      *                                    checkOnError:验证时候以后将验证绑定到keyup事件,
+     *                                    timer: true, //是否使用定时器验证，若否，使用keydown和onpaste代替
      *                                    tipDir:errorTip位置,
      *                                    tipOffset:{
      *                                        top:
@@ -525,6 +683,7 @@
             //设置验证失败时的错误信息
             function error() {
                 validation.passed = false;
+                //validation.onError = true;
                 if (errorLoc) {
                     if (errorLoc.indexOf('#') != -1) {
                         $(errorLoc).html(msg);
@@ -535,8 +694,47 @@
 
                 ele.addClass(validation.errorClass);
 
-                if(validation.checkOnError){
-                    if(!validation.interval){
+                if(validation.checkOnError && !validation.binded){
+                    validation.binded = true;
+                    if(!validation.timer){
+                        if(browser.ie){//IE
+                            if(delegate){
+                                //delegate
+                                $(document).delegate("#" + id, "keydown", function(e) {
+                                    setTimeout(_this.validate,0);
+                                });
+                            } else {
+                                //on
+                                ele.on("keydown",function(e) {
+                                    setTimeout(_this.validate,0);
+                                });
+                            }
+                        } else {//非IE
+                            if(delegate){
+                                //delegate
+                                $(document).delegate("#" + id, "input", function(e) {
+                                    setTimeout(_this.validate,0);
+                                });
+                            } else {
+                                //on
+                                ele.on("input",function(e) {
+                                    setTimeout(_this.validate,0);
+                                });
+                            }
+                        }
+                        
+                        if(delegate){
+                            //delegate
+                            $(document).delegate("#" + id, "paste",function(e){
+                                setTimeout(_this.validate, 0);
+                            });
+                        } else {
+                            //on
+                            ele.on("paste",function(e){
+                                setTimeout(_this.validate, 0);
+                            });
+                        }
+                    } else if(!validation.interval){
                         validation.interval = setInterval(_this.validate,checkInterval);
                     }
                 }
@@ -545,11 +743,11 @@
                     $("#" + id + "_errTip").remove();
                     var errTip = $(Mustache.render(validation.errTipTpl, {
                         id: id + "_errTip",
-                        zindex: $.Validator.getZIndex($("#" + id)),
+                        zindex: $.Validator.getZIndex(ele),
                         message: msg
                     }));
                     validation.errTip = errTip;
-                    var parent = validation.parent?validation.parent:"body";
+                    var parent = validation.parent ? validation.parent : "body";
                     $(parent).append(errTip);
                     $.Validator.setTipLoc(id, errTip, validation.tipDir, offsetLeft, offsetTop);
                 }
@@ -557,10 +755,12 @@
         }
 
         _this.check = function(){
-            if(validation.interval){
-                validation.interval = null;
-                window.clearInterval(validation.interval);
-            }
+            // validation.binded = false;
+
+            // if(validation.interval){
+            //     validation.interval = null;
+            //     window.clearInterval(validation.interval);
+            // }
             _this.validate();
         };
 
@@ -579,12 +779,57 @@
             }
         }
 
+        //动态验证
         if(validation.dynamicVld) {
-            setInterval(dynamicCheck, checkInterval);
+            if(validation.timer){
+                setInterval(dynamicCheck, checkInterval);
+            } else {
+                if(browser.ie){//IE
+                    if(delegate){
+                        //delegate
+                        $(document).delegate("#" + id, "keydown", function(e) {
+                            setTimeout(dynamicCheck,0);
+                        });
+                    } else {
+                        //on
+                        ele.on("keydown",function(e) {
+                            setTimeout(dynamicCheck,0);
+                        });
+                    }
+                } else {//非IE
+                    if(delegate){
+                        //delegate
+                        $(document).delegate("#" + id, "input", function(e) {
+                            setTimeout(dynamicCheck,0);
+                        });
+                    } else {
+                        //on
+                        ele.on("input",function(e) {
+                            setTimeout(dynamicCheck,0);
+                        });
+                    }
+                    
+                }
+                
+                if(delegate){
+                    //delegate
+                    $(document).delegate("#" + id, "paste",function(e){
+                        setTimeout(dynamicCheck, 0);
+                    });
+                } else {
+                    //on
+                    $("#" + id).on("paste",function(e){
+                        setTimeout(dynamicCheck, 0);
+                    });
+                }
+            }
         }
 
-        function dynamicCheck(vld){
-            _this.validate();
+        function dynamicCheck(){
+            var result = VldRulesLib.validate(ele[0].value, validation.rule, "", msg);
+            if(!result.result){
+                ele[0].value = result.revisedVal;
+            }
         }
 
 

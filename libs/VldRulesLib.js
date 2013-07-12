@@ -66,6 +66,7 @@ var VldRulesLib = {
             result.msg = msg2;
             return result;
         }
+        return result;
     },
 
     /*
@@ -207,6 +208,7 @@ var VldRulesLib = {
                 result.msg = msg1;
             } else {
                 result.result = false;
+                result.revisedVal = value.replace(/[^0-9\-\(\)\s]/ig, "");
                 result.code = "E412";
                 result.msg = msg2;
             }
@@ -226,6 +228,7 @@ var VldRulesLib = {
                 result.msg = msg1;
             } else {
                 result.result = false;
+                result.revisedVal = value.replace(/[^0-9\-\s]/ig, "");
                 result.code = "E413";
                 result.msg = msg2;
             }
