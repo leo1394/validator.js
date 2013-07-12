@@ -562,7 +562,7 @@
                 window.clearInterval(validation.interval);
             }
             _this.validate();
-        }
+        };
 
         //重置TIP位置
         _this.resetTip = function(){
@@ -601,7 +601,7 @@
         dynamicVld: false,
         errTipTpl: "<div class='errorTip' id='{{id}}' style='z-index:{{zindex}};position:absolute;'>{{message}}</div>",
         msg: "输入有误，请重新输入"
-    }
+    };
 
 /**********************************************************************/
     /*
@@ -667,11 +667,7 @@
      * @return {boolean} 验证通过与否
      */
     function validateSingle(itemId){
-        var item;
-        var input;
-        var data_pattern;
-        var rules;
-        var value;
+        var item, input, data_pattern, rules, value;
 
         item = $("#" + itemId);
         if(!item){
