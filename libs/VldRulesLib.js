@@ -50,20 +50,22 @@ var VldRulesLib = {
             result.revisedVal = value;
             result.code = "E201";
             result.msg = msg1;
+            return result;
         }
         if (args.length == 0 || !/^[\d.-]*$/.test(args)) {
             result.result = false;
             result.revisedVal = value;
             result.code = "E416";
             result.msg = msg2;
+            return result;
         }
         if (!/^[\d.-]*$/.test(value)) {
             result.result = false;
             result.revisedVal = value.replace(/[^\d.-]/ig, "");
             result.code = "E404";
             result.msg = msg2;
+            return result;
         }
-        return result;
     },
 
     /*
@@ -86,6 +88,7 @@ var VldRulesLib = {
                 result.result = false,
                 result.code = "E401",
                 result.msg = msg2;
+                return result;
             }
             if (typeof value != "boolean") {
                 result.result = false;
