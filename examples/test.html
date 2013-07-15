@@ -202,33 +202,33 @@
 
 		<div class="outer">
 			<div>data-pattern验证</div>
-			<div id="item_text1">
+			<div id="item_text1"  data-pattern="required">
 				<label for="dp_text1">必填:</label>
-				<input type="text" id="dp_text1" name="dp_text1" data-pattern="required"/>
+				<input type="text" id="dp_text1" name="dp_text1"/>
 				<p class="errmsg">该项必填</p>
 			</div>
 
-			<div id="item_text2">
+			<div id="item_text2"  data-pattern="required&min[3]&max[10]">
 				<label for="dp_text2">长度3-10:</label>
-				<input type="text" id="dp_text2" name="dp_text2" data-pattern="required&min[3]&max[10]"/>
+				<input type="text" id="dp_text2" name="dp_text2"/>
 				<p class="errmsg">长度必须在3-10之间</p>
 			</div>
 
-			<div id="item_email">
+			<div id="item_email"  data-pattern="required&email">
 				<label for="dp_email">email:</label>
-				<input type="text" id="dp_email" name="dp_email" data-pattern="required&email"/>
+				<input type="text" id="dp_email" name="dp_email"/>
 				<p class="errmsg">email格式错误</p>
 			</div>
 
-			<div id="item_idCard">
+			<div id="item_idCard"  data-pattern="required&idCard">
 				<label for="dp_re">身份证号码:</label>
-				<input type="text" id="dp_idCard" name="dp_idCard" data-pattern="required&idCard"/>
+				<input type="text" id="dp_idCard" name="dp_idCard"/>
 				<p class="errmsg">身份证号码格式不正确</p>
 			</div>
 
-			<div id="item_re">
+			<div id="item_re"  data-pattern="required&regexp[/word/]">
 				<label for="dp_re">自定义正则:</label>
-				<input type="text" id="dp_re" name="dp_re" data-pattern="required&regexp[/word/]"/>
+				<input type="text" id="dp_re" name="dp_re"/>
 				<p class="errmsg">不满足自定义的正则表达式规则</p>
 			</div>
 

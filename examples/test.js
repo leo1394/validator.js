@@ -232,7 +232,9 @@ $(function() {
     /*data-pattern验证*/
     
     $.Validator.dpShowErrClass = "showError";
-    
+    $.Validator.timer = true;
+    $.Validator.dynamicVld = true;
+    $.Validator.initDynamic();
     //单个验证 by id
     $("#dp_submit").bind("click", function(){
         $.Validator.dpValidate("item_text1");

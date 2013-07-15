@@ -861,17 +861,131 @@
     /*
      * 验证失败后是否自动监听
      */
-    $.Validator.dpAutoListen = true;
+    $.Validator.checkOnError = true;
+
+    /*
+     * 是否动态验证
+     */
+    $.Validator.dynamicVld = false;
 
     /*
      * 监听间隔
      */
     $.Validator.dpInterval = 100;
 
+    /* 
+     * 使用timer还是keydown和paste
+     */
+    $.Validator.timer = true;
+
     /*
      * 记录当前哪个item在被监听
      */
-    $.Validator.dpItemsInterval = {};
+    $.Validator.dpItemsOnCheck = {};
+
+
+    /*
+     * 初始化函数
+     */
+    $.Validator.initDynamic = function(){
+        //绑定动态验证
+        if($.Validator.dynamicVld){
+            var items = $("div[data-pattern]");
+            var input = items.find("input");
+            if($.Validator.timer){
+                setInterval(function(){
+                    $.each(items,function(index,val){
+                        $.Validator.dynamicCheck(val.id);
+                    });
+                },$.Validator.dpInterval);
+            } else {
+                if (browser.ie) { //IE
+                    if (delegate) {
+                        //delegate
+                        $(document).delegate(input, "keydown", function(e) {
+                            setTimeout(function(){
+                                $.Validator.dynamicCheck(e.target.parentNode.id);
+                            }, 0);
+                        });
+                    } else {
+                        //on
+                        input.on("keydown", function(e) {
+                            setTimeout(function(){
+                                $.Validator.dynamicCheck(e.target.parentNode.id);
+                            }, 0);
+                        });
+                    }
+                } else { //非IE
+                    if (delegate) {
+                        //delegate
+                        $(document).delegate(input, "input", function(e) {
+                            setTimeout(function(){
+                                $.Validator.dynamicCheck(e.target.parentNode.id);
+                            }, 0);
+                        });
+                    } else {
+                        //on
+                        input.on("input", function(e) {
+                            setTimeout(function(){
+                                $.Validator.dynamicCheck(e.target.parentNode.id);
+                            }, 0);
+                        });
+                    }
+                }
+
+                if (delegate) {
+                    //delegate
+                    $(document).delegate(input, "paste", function(e) {
+                        setTimeout(function(){
+                            $.Validator.dynamicCheck(e.target.parentNode.id);
+                        }, 0);
+                    });
+                } else {
+                    //on
+                    input.on("paste", function(e) {
+                        setTimeout(function(){
+                            $.Validator.dynamicCheck(e.target.parentNode.id);
+                        }, 0);
+                    });
+                }
+            }
+            
+        }
+    }
+    
+    
+    $.Validator.dynamicCheck = function(itemId){
+        var item, input, data_pattern, rule, value;
+        item = $("#" + itemId);
+        if(!item){
+            return true;
+        }
+
+        input = item.find("input");
+        if(!input){
+            return true;
+        }
+
+        data_pattern = item.attr("data-pattern");
+        if(!data_pattern){
+            return true;
+        }
+
+        value = input[0].value;
+
+        //验证
+        rule = data_pattern;
+        if (rule.indexOf("#") != -1) {
+            rule = rule.replace(/#[a-zA-Z0-9_]+/ig, function(val, index, original) {
+                return $(val)[0].value + "";
+            });
+        }
+
+        var result = VldRulesLib.validate(value, rule, "", "");
+        if(!result.result){
+            input[0].value = result.revisedVal;
+        }
+    }
 
     /*
      * 验证接口
@@ -883,12 +997,12 @@
         if(arguments.length == 1){
             //验证单个标签
             if(typeof elms == "string"){
-                return validateSingle(elms);
+                return $.Validator.validateSingle(elms);
             }
             //批量验证标签,数组形式传参
             else if(typeof elms == "object" && elms instanceof Array){
                 for(var i = 0; i < elms.length; i++){
-                    results[elms[i]] = validateSingle(elms[i]);
+                    results[elms[i]] = $.Validator.validateSingle(elms[i]);
                 }
                 return results;
             }
@@ -897,7 +1011,7 @@
         else if(arguments.length > 1){
             for(var i = 0; i < arguments.length; i++){
                 if(typeof arguments[i] == "string"){
-                    results[arguments[i]] = validateSingle(arguments[i]);
+                    results[arguments[i]] = $.Validator.validateSingle(arguments[i]);
                 }else{
                     results[arguments[i]] = undefined;
                 }
@@ -911,8 +1025,8 @@
      * @param itemId {string} 待验证的item的ID
      * @return {boolean} 验证通过与否
      */
-    function validateSingle(itemId){
-        var item, input, data_pattern, rules, value;
+    $.Validator.validateSingle = function(itemId){
+        var item, input, data_pattern, rule, value;
 
         item = $("#" + itemId);
         if(!item){
@@ -924,16 +1038,15 @@
             return true;
         }
 
-        data_pattern = input.attr("data-pattern");
+        data_pattern = item.attr("data-pattern");
         if(!data_pattern){
             return true;
         }
 
-        //rules = $.Validator.parseRule(data_pattern);
         value = input[0].value;
 
         //验证
-        var rule = data_pattern;
+        rule = data_pattern;
         if (rule.indexOf("#") != -1) {
             rule = rule.replace(/#[a-zA-Z0-9_]+/ig, function(val, index, original) {
                 return $(val)[0].value + "";
@@ -942,19 +1055,75 @@
         VldRulesLib.validate(value, rule, "", "", ok, error);
         //验证通过后执行的操作
         function ok(){
-            if($.Validator.dpItemsInterval[itemId]){
-                window.clearInterval($.Validator.dpItemsInterval[itemId]);
-                $.Validator.dpItemsInterval[itemId] = null;
-            }
+            // if($.Validator.checkOnError){
+            //     if($.Validator.time){
+            //         if($.Validator.dpItemsOnCheck[itemId]){
+            //             window.clearInterval($.Validator.dpItemsOnCheck[itemId]);
+            //             $.Validator.dpItemsOnCheck[itemId] = null;
+            //         }
+            //     } else if(!$.Validator.dynamicCheck && dpItemsOnCheck[itemId]) {
+            //             //取消事件绑定
+            //         }
+            //     }
+            // }
             item.removeClass($.Validator.dpShowErrClass);
+            
         }
 
         //验证失败后执行的操作
         function error(){
-            if(!$.Validator.dpItemsInterval[itemId]){
-                $.Validator.dpItemsInterval[itemId] = setInterval(validateSingle,$.Validator.dpInterval,itemId);
+            if ($.Validator.checkOnError) {
+                if ($.Validator.timer) {
+                    if (!$.Validator.dpItemsOnCheck[itemId]) {
+                        $.Validator.dpItemsOnCheck[itemId] = setInterval($.Validator.validateSingle, $.Validator.dpInterval, itemId);
+                    }
+                } else if(!dpItemsOnCheck[itemId]){
+                    dpItemsOnCheck[itemId] = true;
+                    if(browser.ie){//IE
+                        if(delegate){
+                            //delegate
+                            $(document).delegate("#" + itemId + " input", "keydown", function(e) {
+                                setTimeout(check,0);
+                            });
+                        } else {
+                            //on
+                            input.on("keydown",function(e) {
+                                setTimeout(check,0);
+                            });
+                        }
+                    } else {//非IE
+                        if(delegate){
+                            //delegate
+                            $(document).delegate("#" + itemId + " input", "input", function(e) {
+                                setTimeout(check,0);
+                            });
+                        } else {
+                            //on
+                            input.on("input",function(e) {
+                                setTimeout(check,0);
+                            });
+                        }
+                    }
+                    
+                    if(delegate){
+                        //delegate
+                        $(document).delegate("#" + itemId + " input", "paste",function(e){
+                            setTimeout(check, 0);
+                        });
+                    } else {
+                        //on
+                        input.on("paste",function(e){
+                            setTimeout(check, 0);
+                        });
+                    }
+                }
             }
+            
             item.addClass($.Validator.dpShowErrClass);
+        }
+
+        function check(){
+            VldRulesLib.validate(value, rule, "", "", ok, error);
         }
     }
 
