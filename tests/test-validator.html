@@ -1,0 +1,194 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+	<head>
+		<meta charset="UTF-8"></meta>
+		<title>UT 1 for Validator.js</title>
+		<link rel="stylesheet" type="text/css" href="qunit/qunit.css">
+		<style type="text/css">
+		body{
+
+		}
+		fieldset{
+			width:300px;
+			margin-left:auto;
+			margin-right: auto;
+		}
+		.error{
+			background-color: #FFFFCC;
+			border:2px dotted red;
+		}
+		.outer{
+			border:1px solid black;
+			margin-left: auto;
+			margin-right: auto;
+			width:440px;
+			background-color: #f0f0f0;
+		}
+		.errorTip{
+			border:1px dotted blue;
+			background-color: #ddffdd;
+		}
+		.outer label{
+			width:200px;
+			text-align:right;
+			display:inline-block;
+		}
+		.popButton{
+			text-align: center;
+		}
+		.popup{
+			width:700px;
+			position:absolute;
+			padding-top: 10px;
+			padding-bottom: 30px;
+			top:100px;
+			left:600px;
+			background-color: #999999;
+			z-index:3;
+			display: none;
+		}
+		#submit2{
+			float:right;
+		}
+		#popup{
+			
+		}
+		.errmsg{
+			display:none;
+			margin-top:0;
+			margin-bottom:0;
+			margin-left: auto;
+			margin-right: auto;
+			text-align: center;
+			width:300px;
+			background-color: gray;
+		}
+		.showError{
+
+		}
+		.showError .errmsg{
+			display:block;
+		}
+		.showError input{
+			background-color: #FFFFCC;
+			border:1px dotted red;
+		}
+		</style>
+	</head>
+	<body>
+
+		<div id="qunit"></div>
+		<div id="qunit-fixture"></div>
+
+		<div class="outer">
+			<div>验证1</div>
+
+			<label for="text1">必填:</label>
+			<input type="text" id="text1" name="text1" placeholder="Input text here..."></input><span id="limiter_text1"></span>
+			<div id="text1_err" class="errorInfo"></div>
+
+			<label for="text2">长度3-10(动态):</label>
+			<input type="text" id="text2" name="text2" placeholder="Input text here..."></input><span id="limiter_text2"></span>
+			<div id="text2_err" class="errorInfo"></div>
+
+			<label for="email">E-Mail:</label>
+			<input type="text" id="email" name="email"></input><span id="limiter_email"></span>
+			<div></div>
+
+			<label for="phone">座机:</label>
+			<input type="text" id="phone" name="phone"></input><span id="limiter_phone"></span>
+			<div></div>
+
+			<label for="mobile">手机:</label>
+			<input type="text" id="mobile" name="mobile"></input><span id="limiter_mobile"></span>
+			<div></div>
+
+			<label for="url">URL:</label>
+			<input type="text" id="url" name="url"></input><span id="limiter_url"></span>
+			<div></div>
+
+			<label for="number">数字(动态):</label>
+			<input type="text" id="number" name="number"></input><span id="limiter_number"></span>
+			<div></div>
+
+			<label for="alpha">字母(动态):</label>
+			<input type="text" id="alpha" name="alpha"></input><span id="limiter_alpha"></span>
+			<div></div>
+
+			<label for="alpha_underline">字母下划线(动态):</label>
+			<input type="text" id="alpha_underline" name="alpha_underline"></input><span id="limiter_alpha_underline"></span>
+			<div></div>
+
+			<label for="alphanumeric">字母数字(动态):</label>
+			<input type="text" id="alphanumeric" name="alphanumeric"></input><span id="limiter_alphanumeric"></span>
+			<div></div>
+
+			<label for="alphanumeric_underline">字母数字下划线(动态):</label>
+			<input type="text" id="alphanumeric_underline" name="alphanumeric_underline"></input><span id="limiter_alphanumeric_underline"></span>
+			<div></div>
+
+			<label for="lt">小于:</label>
+			<input type="text" id="lt" name="lt"></input><span id="limiter_lt"></span>
+			<div></div>
+
+			<label for="gt">大于:</label>
+			<input type="text" id="gt" name="gt"></input><span id="limiter_gt"></span>
+			<div></div>
+
+			<label for="equal">等于:</label>
+			<input type="text" id="equal" name="equal"></input><span id="limiter_equal"></span>
+			<div></div>
+
+			<label for="le">小于等于:</label>
+			<input type="text" id="le" name="le"></input><span id="limiter_le"></span>
+			<div></div>
+
+			<label for="ge">大于等于(动态):</label>
+			<input type="text" id="ge" name="ge"></input><span id="limiter_ge"></span>
+			<div></div>
+
+			<label for="only">只包含(动态):</label>
+			<input type="text" id="only" name="only"></input><span id="limiter_only"></span>
+			<div></div>
+
+			<label for="exclude">不包含(动态):</label>
+			<input type="text" id="exclude" name="exclude"></input><span id="limiter_only"></span>
+			<div></div>
+
+			<label for="trad2simp">繁简转换(动态):</label>
+			<input type="text" id="trad2simp" name="trad2simp"></input><span id="limiter_only"></span>
+			<div></div>
+
+			<label for="regexp">正则表达式:</label>
+			<input type="text" id="regexp" name="regexp"></input><span id="limiter_regexp"></span>
+			<div></div>
+
+			<label for="custom_func">自定义函数:</label>
+			<input type="text" id="custom_func" name="custom_func"></input><span id="limiter_custom_func"></span>
+			<div></div>
+
+			<fieldset>
+				<legend>公共提示区</legend>
+				<div id="errField"></div>
+			</fieldset>
+			<input type="button" id="submit" value="提交"></input>
+			<div id="submit2">MouseMove</div>
+			<br/>
+		</div>
+		
+		<div id="blank">blank</div>
+
+		<script type="text/javascript" src="../libs/jquery-1.10.1.js"></script>
+		<script type="text/javascript" src="qunit/qunit.js"></script>
+		<script type="text/javascript" src="qunit/jquery.simulate.js"></script>
+		<script type="text/javascript" src="../libs/mustache.js"></script>
+		<script type="text/javascript" src="../libs/limiter.js"></script>
+		<script type="text/javascript" src="../libs/VldRulesLib.js"></script>
+		<script type="text/javascript" src="../validator.js"></script>
+		<script type="text/javascript" src="syn-master/synthetic.js"></script>
+		<script type="text/javascript" src="syn-master/mouse.js"></script>
+		<script type="text/javascript" src="syn-master/browsers.js"></script>
+		<script type="text/javascript" src="syn-master/key.js"></script>
+		<script type="text/javascript" src="test-validator.js"></script>
+	</body>
+</html>
