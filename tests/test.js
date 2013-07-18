@@ -237,6 +237,7 @@ $(function() {
     $.Validator.initDynamic();
     //单个验证 by id
     $("#dp_submit").bind("click", function(){
+        console.log(123);
         $.Validator.dpValidate("item_text1");
         $.Validator.dpValidate("item_text2");
         $.Validator.dpValidate("item_email");

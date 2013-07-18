@@ -185,26 +185,6 @@ $(function() {
     var queue = [];
     var $inputs = $("input");
 
-    //利用ajax实现sleep函数
-    function sleep(time){
-        var start = new Date() - 0;
-        $.ajax({
-            url:"sleep.php?time=" + time,
-            method:"GET",
-            async:false,
-            success:function(data){
-                
-            },
-            complete:function(){
-                var time = new Date() - start;
-                console.log(time);
-            },
-            error:function(){
-                console.log(234);
-            }
-        });
-    }
-
     function reset(){
         $inputs.removeClass("error");
         for(var i = 0; i < $inputs.length; i++){
@@ -218,13 +198,7 @@ $(function() {
     function getValue(){
         return $el[0].value;
     }
-    function input($el,value){
-        for (var i = 0; i < value.length; i++) {
-            $el.simulate(keyEvent, {
-                charCode: value.charAt(72)
-            });
-        }
-    }
+
     function init(eleId){
         queue.push(function(){
             id = eleId;

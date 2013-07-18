@@ -11,21 +11,14 @@
     //debug
     var delegate = false;
 
-    /*
-     * 获取浏览器类型
-     */
+    //获取浏览器类型
     var browser = {};
-    var ua = navigator.userAgent.toLowerCase();
-    var s;
-    (s = ua.match(/msie ([\d.]+)/)) ? browser.ie = s[1] :
-        (s = ua.match(/firefox\/([\d.]+)/)) ? browser.firefox = s[1] :
-        (s = ua.match(/chrome\/([\d.]+)/)) ? browser.chrome = s[1] :
-        (s = ua.match(/opera.([\d.]+)/)) ? browser.opera = s[1] :
-        (s = ua.match(/version\/([\d.]+).*safari/)) ? browser.safari = s[1] : 0;
+    browser.ie = $.support.boxModel;
 
     $.Validator = {};
+
     /*
-     * validator 定义
+     * validate 定义
      * @param:validations {array}  应用到当前form中所有field的规则
      *                                 eg:[{
                                          field:'userName',
@@ -69,13 +62,13 @@
             if (opts.vldOnBlur || opts.vldOnEnter) {
                 for (var i = 0; i < validations.length; i++) {
                     if (opts.vldOnBlur) {
-                        $(document).delegate("#" + validations[i].field, "blur", {
+                        $(opts.parent).delegate("#" + validations[i].field, "blur", {
                             index: i,
                             field: validations[i].field
                         }, check);
                     }
                     if (opts.vldOnEnter) {
-                        $(document).delegate("#" + validations[i].field, "keyup", {
+                        $(opts.parent).delegate("#" + validations[i].field, "keyup", {
                             index: i,
                             field: validations[i].field
                         }, onEnterHandler);
@@ -90,16 +83,17 @@
                 }
             }
 
-            //设置limiter、passed属性、hasRel属性、动态验证
+            //设置limiter、passed属性、hasRel属性、$el、动态验证
             for (var i = 0; i < validations.length; i++) {
                 validations[i].passed = true;
+                validations[i].$el = $("#" + validations[i].field);
                 if (validations[i].rule.constructor == RegExp || (typeof validations[i].rule) == "function") {
                     
                 } else if (validations[i].rule.indexOf("#") != -1) {
                     hasRel = true; //关联检查功能没有开启
                 }
                 if (validations[i].limiter) {
-                    $("#" + validations[i].field).limiter(validations[i].limiter);
+                    validations[i].$el.limiter(validations[i].limiter);
                 }
                 if(validations[i].dynamicVld){
                     dynamicVlds.push(validations[i]);
@@ -147,14 +141,14 @@
             if(browser.ie){//IE
                 if(delegate){
                     //delegate
-                    $(document).delegate("#" + vld.field, "keydown", function(e) {
+                    $(opts.parent).delegate("#" + vld.field, "keydown", function(e) {
                         setTimeout(function() {
                             dynamicCheck(getValidation(e.target.id));
                         }, 0);
                     });
                 } else {
                     //on
-                    $("#" + vld.field).on("keydown",function(e) {
+                    vld.$el.on("keydown",function(e) {
                         setTimeout(function() {
                             dynamicCheck(getValidation(e.target.id));
                         }, 0);
@@ -163,14 +157,14 @@
             } else {//非IE
                 if(delegate){
                     //delegate
-                    $(document).delegate("#" + vld.field, "input", function(e) {
+                    $(opts.parent).delegate("#" + vld.field, "input", function(e) {
                         setTimeout(function() {
                             dynamicCheck(getValidation(e.target.id));
                         }, 0);
                     });
                 } else {
                     //on
-                    $("#" + vld.field).on("input",function(e) {
+                    vld.$el.on("input",function(e) {
                         setTimeout(function() {
                             dynamicCheck(getValidation(e.target.id));
                         }, 0);
@@ -181,14 +175,14 @@
             
             if(delegate){
                 //delegate
-                $(document).delegate("#" + vld.field, "paste",function(e){
+                $(opts.parent).delegate("#" + vld.field, "paste",function(e){
                     setTimeout(function(){
                         dynamicCheck(getValidation(e.target.id));
                     }, 0);
                 });
             } else {
                 //on
-                $("#" + vld.field).on("paste",function(e){
+                vld.$el.on("paste",function(e){
                     setTimeout(function(){
                         dynamicCheck(getValidation(e.target.id));
                     }, 0);
@@ -281,7 +275,8 @@
             //var rules = $.Validator.parseRule(validation.rule);
             var msg = validation.msg ? validation.msg : opts.defaultMsg;
             var errorLoc = validation.errorLoc;
-            var input = $("#" + field)[0];
+            var $el = validation.$el;
+            var input = validation.$el[0];
             var value = input.value;
             var offsetLeft = validation.tipOffset && validation.tipOffset.left ? validation.tipOffset.left : 0;
             var offsetTop = validation.tipOffset && validation.tipOffset.top ? validation.tipOffset.top : 0;
@@ -341,7 +336,7 @@
                     $("#" + field + "_errTip").remove();
                 }
                 errorMsg[field] = "";
-                $("#" + field).removeClass(opts.errorClass);
+                $el.removeClass(opts.errorClass);
 
                 showInErrorField();
             }
@@ -360,21 +355,21 @@
                 } else {
                     errorMsg[field] = msg;
                 }
-                $("#" + field).addClass(opts.errorClass);
+                $el.addClass(opts.errorClass);
 
                 if(opts.checkOnError && !opts.timer && !validation.binded){
                     validation.binded = true;
                     if(browser.ie){//IE
                         if(delegate){
                             //delegate
-                            $(document).delegate("#" + field, "keydown", function(e) {
+                            $(opts.parent).delegate("#" + field, "keydown", function(e) {
                                 setTimeout(function() {
                                     checkOnError(e);
                                 }, 0);
                             });
                         } else {
                             //on
-                            $("#" + field).on("keydown", function(e) {
+                            $el.on("keydown", function(e) {
                                 setTimeout(function() {
                                     checkOnError(e);
                                 }, 0);
@@ -384,14 +379,14 @@
                     } else {//非IE
                         if(delegate){
                             //delegate
-                            $(document).delegate("#" + field, "input", function(e) {
+                            $(opts.parent).delegate("#" + field, "input", function(e) {
                                 setTimeout(function() {
                                     checkOnError(e);
                                 }, 0);
                             });
                         } else {
                             //on
-                            $("#" + field).on("input", function(e) {
+                            $el.on("input", function(e) {
                                 setTimeout(function() {
                                     checkOnError(e);
                                 }, 0);
@@ -401,14 +396,14 @@
                     
                     if(delegate){
                         //delegate
-                        $(document).delegate("#" + field, "paste", function(e) {
+                        $(opts.parent).delegate("#" + field, "paste", function(e) {
                             setTimeout(function() {
                                 checkOnError(e);
                             }, 0);
                         });
                     } else {
                         //on
-                        $("#" + field).on("paste", function(e) {
+                        $el.on("paste", function(e) {
                             setTimeout(function() {
                                 checkOnError(e);
                             }, 0);
@@ -420,7 +415,7 @@
                     $("#" + field + "_errTip").remove();
                     var errTip = $(Mustache.render(opts.errTipTpl, {
                         id: field + "_errTip",
-                        zindex:$.Validator.getZIndex($("#" + field)),
+                        zindex:$.Validator.getZIndex($el),
                         message: msg
                     }));
                     var parent = opts.parent?opts.parent:"body";
@@ -570,7 +565,7 @@
         tipOffset: null, //错误tip显示位置的偏移量，需要包含left和top
         defaultMsg: "输入有误，请重新输入", //默认的错误提示信息
         trigger:null, //验证触发器，数组类型，每个元素包括元素ID和时间名称
-        parent:null//父节点$selector,为空的话自动指定为body
+        parent:"body"//父节点$selector,为空的话自动指定为body
     }
 
 /**********************************************************************/
@@ -700,7 +695,7 @@
                         if(browser.ie){//IE
                             if(delegate){
                                 //delegate
-                                $(document).delegate("#" + id, "keydown", function(e) {
+                                $(validation.parent).delegate("#" + id, "keydown", function(e) {
                                     setTimeout(_this.validate,0);
                                 });
                             } else {
@@ -712,7 +707,7 @@
                         } else {//非IE
                             if(delegate){
                                 //delegate
-                                $(document).delegate("#" + id, "input", function(e) {
+                                $(validation.parent).delegate("#" + id, "input", function(e) {
                                     setTimeout(_this.validate,0);
                                 });
                             } else {
@@ -725,7 +720,7 @@
                         
                         if(delegate){
                             //delegate
-                            $(document).delegate("#" + id, "paste",function(e){
+                            $(validation.parent).delegate("#" + id, "paste",function(e){
                                 setTimeout(_this.validate, 0);
                             });
                         } else {
@@ -787,7 +782,7 @@
                 if(browser.ie){//IE
                     if(delegate){
                         //delegate
-                        $(document).delegate("#" + id, "keydown", function(e) {
+                        $(validation.parent).delegate("#" + id, "keydown", function(e) {
                             setTimeout(dynamicCheck,0);
                         });
                     } else {
@@ -799,7 +794,7 @@
                 } else {//非IE
                     if(delegate){
                         //delegate
-                        $(document).delegate("#" + id, "input", function(e) {
+                        $(validation.parent).delegate("#" + id, "input", function(e) {
                             setTimeout(dynamicCheck,0);
                         });
                     } else {
@@ -813,7 +808,7 @@
                 
                 if(delegate){
                     //delegate
-                    $(document).delegate("#" + id, "paste",function(e){
+                    $(validation.parent).delegate("#" + id, "paste",function(e){
                         setTimeout(dynamicCheck, 0);
                     });
                 } else {
@@ -845,7 +840,8 @@
         },
         dynamicVld: false,
         errTipTpl: "<div class='errorTip' id='{{id}}' style='z-index:{{zindex}};position:absolute;'>{{message}}</div>",
-        msg: "输入有误，请重新输入"
+        msg: "输入有误，请重新输入",
+        parent: "body"
     };
 
 /**********************************************************************/
@@ -883,11 +879,11 @@
      */
     $.Validator.dpItemsOnCheck = {};
 
-
     /*
      * 初始化函数
      */
     $.Validator.initDynamic = function(){
+        var $parent = $(this).parent();
         //绑定动态验证
         if($.Validator.dynamicVld){
             var items = $("div[data-pattern]");
@@ -902,7 +898,7 @@
                 if (browser.ie) { //IE
                     if (delegate) {
                         //delegate
-                        $(document).delegate(input, "keydown", function(e) {
+                        $parent.delegate(input, "keydown", function(e) {
                             setTimeout(function(){
                                 $.Validator.dynamicCheck(e.target.parentNode.id);
                             }, 0);
@@ -918,7 +914,7 @@
                 } else { //非IE
                     if (delegate) {
                         //delegate
-                        $(document).delegate(input, "input", function(e) {
+                        $parent.delegate(input, "input", function(e) {
                             setTimeout(function(){
                                 $.Validator.dynamicCheck(e.target.parentNode.id);
                             }, 0);
@@ -935,7 +931,7 @@
 
                 if (delegate) {
                     //delegate
-                    $(document).delegate(input, "paste", function(e) {
+                    $parent.delegate(input, "paste", function(e) {
                         setTimeout(function(){
                             $.Validator.dynamicCheck(e.target.parentNode.id);
                         }, 0);
@@ -1027,7 +1023,7 @@
      */
     $.Validator.validateSingle = function(itemId){
         var item, input, data_pattern, rule, value;
-
+        var $parent = $("#" + itemId).parent();
         item = $("#" + itemId);
         if(!item){
             return true;
@@ -1077,12 +1073,12 @@
                     if (!$.Validator.dpItemsOnCheck[itemId]) {
                         $.Validator.dpItemsOnCheck[itemId] = setInterval($.Validator.validateSingle, $.Validator.dpInterval, itemId);
                     }
-                } else if(!dpItemsOnCheck[itemId]){
-                    dpItemsOnCheck[itemId] = true;
+                } else if(!$.Validator.dpItemsOnCheck[itemId]){
+                    $.Validator.dpItemsOnCheck[itemId] = true;
                     if(browser.ie){//IE
                         if(delegate){
                             //delegate
-                            $(document).delegate("#" + itemId + " input", "keydown", function(e) {
+                            $parent.delegate("#" + itemId + " input", "keydown", function(e) {
                                 setTimeout(check,0);
                             });
                         } else {
@@ -1094,7 +1090,7 @@
                     } else {//非IE
                         if(delegate){
                             //delegate
-                            $(document).delegate("#" + itemId + " input", "input", function(e) {
+                            $parent.delegate("#" + itemId + " input", "input", function(e) {
                                 setTimeout(check,0);
                             });
                         } else {
@@ -1107,7 +1103,7 @@
                     
                     if(delegate){
                         //delegate
-                        $(document).delegate("#" + itemId + " input", "paste",function(e){
+                        $parent.delegate("#" + itemId + " input", "paste",function(e){
                             setTimeout(check, 0);
                         });
                     } else {

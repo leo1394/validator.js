@@ -1,0 +1,118 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+	<head>
+		<title>UT 2 for Validator.js</title>
+		<meta charset="UTF-8"></meta>
+		<link rel="stylesheet" type="text/css" href="qunit/qunit.css">
+		<style type="text/css">
+		body{
+
+		}
+		.error{
+			background-color: #FFFFCC;
+			border:2px dotted red;
+		}
+		.outer{
+			border:1px solid black;
+			margin-left: auto;
+			margin-right: auto;
+			width:440px;
+			background-color: #f0f0f0;
+		}
+		.errorTip{
+			border:1px dotted blue;
+			background-color: #ddffdd;
+		}
+		label{
+			width:200px;
+			text-align:right;
+			display:inline-block;
+		}
+		.popButton{
+			text-align: center;
+		}
+		.popup{
+			width:700px;
+			position:absolute;
+			padding-top: 10px;
+			padding-bottom: 30px;
+			background-color: #999999;
+			z-index:3;
+			display: none;
+		}
+		.container{
+		}
+		#submit2{
+			float:right;
+		}
+		#popup{
+			
+		}
+		.errmsg{
+			display:none;
+			margin-top:0;
+			margin-bottom:0;
+			margin-left: auto;
+			margin-right: auto;
+			text-align: center;
+			width:300px;
+			background-color: gray;
+		}
+		.showError{
+
+		}
+		.showError .errmsg{
+			display:block;
+		}
+		.showError input{
+			background-color: #FFFFCC;
+			border:1px dotted red;
+		}
+		</style>
+	</head>
+	<body>
+		<div id="qunit"></div>
+		<div id="qunit-fixture"></div>
+		<div class="popButton">
+			<input type="button" id="popup" value="弹窗"/>
+		</div>
+		<br/>
+		<div class="container">
+			<div class="popup">
+				<div class="outer">
+					<div>弹窗验证</div>
+					<label for="sText1">必填:</label>
+					<input type="text" id="sText1"/>
+					<div></div>
+					
+					<label for="sText2">长度3-10:</label>
+					<input type="text" id="sText2"/>
+					<div></div>
+					
+					<label for="sText3">自定义正则:</label>
+					<input type="text" id="sText3"/>
+					<div></div>
+
+					<label for="sText4">自定义函数:</label>
+					<input type="text" id="sText4"/>
+					<div></div>
+
+					<input type="button" id="sSubmit" value="提交" />
+					<input type="button" id="sClose" value="关闭" />
+
+				</div>
+			</div>
+		</div>
+		
+		<div id="blank">blank</div>
+		<script type="text/javascript" src="../libs/jquery-1.8.3.js"></script>
+		<script type="text/javascript" src="qunit/qunit.js"></script>
+		<script type="text/javascript" src="qunit/jquery.simulate.js"></script>
+		<script type="text/javascript" src="../libs/mustache.js"></script>
+		<script type="text/javascript" src="../libs/limiter.js"></script>
+		<script type="text/javascript" src="../libs/VldRulesLib.js"></script>
+		<script type="text/javascript" src="../validator.js"></script>
+		<script type="text/javascript" src="syn-master/dist/syn.js"></script>
+		<script type="text/javascript" src="test-single.js"></script>
+	</body>
+</html>
