@@ -138,6 +138,11 @@ $(function() {
                 return $("#custom_func")[0].value == "test" ? true : false;
             },
             msg: "不满足自定义的函数"
+        },{
+            field:"text",
+            rule:"required&textarea[rows5&length20&noBlankLine&noRepeat&noBlankHead&noBlankRear]",
+            msg:"不满足textarea格式要求",
+            dynamicVld:true
         }
     ], {
         vldOnclick: "#submit",

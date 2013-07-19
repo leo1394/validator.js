@@ -147,6 +147,11 @@ $(function() {
                 return $("#custom_func")[0].value == "test" ? true : false;
             },
             msg: "不满足自定义的函数"
+        },{
+            field:"text",
+            rule:"required&textarea[rows5&length20&noBlankLine&noRepeat&noBlankHead&noBlankRear]",
+            msg:"不满足textarea格式要求",
+            dynamicVld:true
         }
     ], {
         vldOnclick: "#submit",
@@ -375,6 +380,28 @@ $(function() {
     init("custom_func");
     testStyle("失败", true, "word");
     testStyle("通过", false, "test");
+
+    init("text")
+    var testValue = "  sogou-inc.com  \n"
+              + " Haidian District \n"
+              + "    \n"
+              + "   \n"
+              + "Beijing\n"
+              + "China\n"
+              + "\n"
+              + "\n"
+              + "Beijing\n"
+              + "\n"
+              + "\n"
+              + "0123456789012345678901234567890\n"
+              + "BIZTECH\n"
+              + "\n";
+    var resultValue = "sogou-inc.com\n"
+          + "Haidian District\n"
+          + "Beijing\n"
+          + "China\n"
+          + "01234567890123456789";
+    testStyleVal("综合测试", false, testValue, resultValue)
     
     //启动
     next();
