@@ -118,7 +118,7 @@
                                 if (hasRel) {
                                     validateRel(validations[i]);
                                 } else {
-                                    validate(validation[i]);
+                                    validate(validations[i]);
                                 }
                             }
                         }
@@ -313,7 +313,7 @@
                 });
             }
             if(arguments.callee.caller == dynamicCheck){
-                var result = VldRulesLib.validate(value, rule, "");
+                var result = VldRulesLib.validate(value, rule, "", msg, ok, error);
                 if(!result.result){
                     input.value = result.revisedVal;
                 }
@@ -326,10 +326,17 @@
             function ok() {
                 validation.passed = true;
                 if (errorLoc) {
+                    var $errorLoc = null;
                     if (errorLoc.indexOf('#') != -1) {
-                        $(errorLoc).html("");
+                        $errorLoc = $(errorLoc);
                     } else {
-                        $('#' + errorLoc).html("");
+                        $errorLoc = $('#' + errorLoc);
+                    }
+                    $errorLoc.html("");
+                    if(opts.errorLocClass){
+                        $errorLoc.removeClass(opts.errorLocClass);
+                    }else{
+                        $errorLoc.hide();
                     }
                 }
                 if (tipDir || opts.tipDir) {
@@ -347,10 +354,17 @@
                 validation.passed = false;
                 validation.onError = true;
                 if (errorLoc) {
+                    var $errorLoc = null;
                     if (errorLoc.indexOf('#') != -1) {
-                        $(errorLoc).html(msg);
+                        $errorLoc = $(errorLoc);
                     } else {
-                        $('#' + errorLoc).html(msg);
+                        $errorLoc = $('#' + errorLoc);
+                    }
+                    $errorLoc.html(msg);
+                    if(opts.errorLocClass){
+                        $errorLoc.addClass(opts.errorLocClass);
+                    }else{
+                        $errorLoc.show();
                     }
                 } else {
                     errorMsg[field] = msg;
@@ -413,11 +427,9 @@
 
                 if (tipDir || opts.tipDir) {
                     $("#" + field + "_errTip").remove();
-                    var errTip = $(Mustache.render(opts.errTipTpl, {
-                        id: field + "_errTip",
-                        zindex:$.Validator.getZIndex($el),
-                        message: msg
-                    }));
+                    var errTip = $(opts.errTipTpl.replace("{{id}}",field + "_errTip")
+                                 .replace("{{zindex}}",$.Validator.getZIndex($el))
+                                 .replace("{{message}}",msg));
                     var parent = opts.parent?opts.parent:"body";
                     $(parent).append(errTip);
                     $.Validator.setTipLoc(field, errTip, tipDir, offsetLeft, offsetTop, opts);
@@ -560,12 +572,13 @@
         timer: true, //是否使用定时器验证，若否，使用keydown和onpaste代替
         errorFiled: null, //集中显示错误信息的区域。
         errorClass: "", //错误时input标签应用的css样式
-        errTipTpl: "<div class='errorTip' id='{{id}}' style='z-index:{{zindex}};position:absolute;'>{{message}}</div>", //错误Tip模板
+        errorLocClass: "", //错误时错误提示标签应用的样式，如show
+        errTipTpl: "<div class='errorTip' id='{{id}}' style='z-index:{{zindex}};position:absolute;'>{{message}}</div>", //错误Tip模板,三个参数
         tipDir: "right", //错误tip的显示位置，可选up,down left,right,关闭tip的话设置为false
         tipOffset: null, //错误tip显示位置的偏移量，需要包含left和top
         defaultMsg: "输入有误，请重新输入", //默认的错误提示信息
-        trigger:null, //验证触发器，数组类型，每个元素包括元素ID和时间名称
-        parent:"body"//父节点$selector,为空的话自动指定为body
+        trigger: null, //验证触发器，数组类型，每个元素包括元素ID和时间名称
+        parent: "body"//父节点$selector,为空的话自动指定为body
     }
 
 /**********************************************************************/
@@ -648,7 +661,7 @@
                 });
             }
             if(arguments.callee.caller == dynamicCheck){
-                var result = VldRulesLib.validate(value, rule, "", msg);
+                var result = VldRulesLib.validate(value, rule, "", msg, ok, error);
                 if(!result.result){
                     ele[0].value = result.revisedVal;
                 }
@@ -736,11 +749,9 @@
 
                 if (tipDir) {
                     $("#" + id + "_errTip").remove();
-                    var errTip = $(Mustache.render(validation.errTipTpl, {
-                        id: id + "_errTip",
-                        zindex: $.Validator.getZIndex(ele),
-                        message: msg
-                    }));
+                    var errTip = $(validation.errTipTpl.replace("{{id}}",id + "_errTip")
+                                 .replace("{{zindex}}",$.Validator.getZIndex(ele))
+                                 .replace("{{message}}",msg));
                     validation.errTip = errTip;
                     var parent = validation.parent ? validation.parent : "body";
                     $(parent).append(errTip);

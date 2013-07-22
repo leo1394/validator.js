@@ -1,0 +1,41 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+	<head>
+		<meta charset="UTF-8"></meta>
+		<style type="text/css">
+			.error{
+				border:1px dotted red;
+			}
+			.errorMsg{
+				display:none;
+			}
+			.showError{
+				display:block;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="wrapper">
+			<div>2位浮点,范围0-10</div>
+			<div class="item">
+				<label for="testInput1">非动态:</label>
+				<input type="text" id="testInput1">
+				<div id="errorMsg1" class="errorMsg">错误提示1</div>
+			</div>
+			<div class="item">
+				<label for="testInput2">动态:</label>
+				<input type="text" id="testInput2">
+				<div id="errorMsg2" class="errorMsg">错误提示2</div>
+			</div>
+			<input type="button" id="check" value="检验">
+			
+		</div>
+
+		<script type="text/javascript" src="../libs/jquery-1.8.3.js"></script>
+		<script type="text/javascript" src="../libs/mustache.js"></script>
+		<script type="text/javascript" src="../libs/limiter.js"></script>
+		<script type="text/javascript" src="../libs/VldRulesLib.js"></script>
+		<script type="text/javascript" src="../validator.js"></script>
+		<script type="text/javascript" src="e1.js"></script>
+	</body>
+</html>
