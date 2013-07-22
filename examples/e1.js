@@ -9,7 +9,7 @@ $(document).ready(function() {
 		msg: "错误消息2",
 		dynamicVld: true //是否动态验证，不填为否
 	}], {
-		vldOnclick: "#check",
+		vldOnclick: "#check", //点击哪个button时触发验证
 		vldOnBlur: false, //失去焦点时自动验证
 		errorClass: "error", //错误时input应用的样式
 		errorLocClass: "showError", //错误时errorMsg应用的样式
