@@ -1,5 +1,5 @@
 $(document).ready(function() {
-	vld = new $.Validator.validate([{
+	vld = new Validator([{
 		field: "testInput1",
 		rule: "required&number[2]&ge[0]&le[10]",//规则之间用&表示"与"关系
 		msg: "错误消息1",

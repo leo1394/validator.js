@@ -338,7 +338,7 @@ $(function() {
     
     //lt
     init("lt");
-    testStyleVal("非法字符", true, "1234!@#$AD_FC__", "1234");
+    testStyleVal("非法字符", true, "1234!@#$AD_FC__", "100");
     testStyleVal("正确", false, "98", "98");
 
     //gt
