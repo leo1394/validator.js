@@ -11,7 +11,7 @@ var delegate = true;
 
 /* 获取浏览器类型 */
 var browser = {
-	ie: !$.support.boxModel
+	ie: $.browser.msie
 };
 
 /* Validator命名空间 */
