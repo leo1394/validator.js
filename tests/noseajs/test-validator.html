@@ -3,7 +3,7 @@
     <head>
         <meta charset="UTF-8"></meta>
         <title>UT 1 for Validator.js</title>
-        <link rel="stylesheet" type="text/css" href="qunit/qunit.css">
+        <link rel="stylesheet" type="text/css" href="../qunit/qunit.css">
         <style type="text/css">
         body{
 
@@ -183,23 +183,14 @@
         
         <div id="blank">blank</div>
 
-        <script type="text/javascript" src="qunit/qunit.js"></script>
-        <script type="text/javascript" src="../libs/jquery-1.8.3.js"></script>
-        <script type="text/javascript" src="syn-master/synthetic.js"></script>
-        <script type="text/javascript" src="syn-master/mouse.js"></script>
-        <script type="text/javascript" src="syn-master/browsers.js"></script>
-        <script type="text/javascript" src="syn-master/key.js"></script>
-        <script type="text/javascript" src="../libs/sea.js"></script>
-        <script type="text/javascript">
-            seajs.config({
-                alias: {
-                    "jquery": "jquery-1.8.3",
-                    "VldRulesLib": "VldRulesLib-1.0.1.js",
-                    "limiter": "limiter",
-                    "Validator": "../validator-1.0.1"
-                }
-            });
-            seajs.use("../tests/test-validator");
-        </script>
+        <script type="text/javascript" src="../qunit/qunit.js"></script>
+        <script type="text/javascript" src="../../libs/jquery-1.8.3.js"></script>
+        <script type="text/javascript" src="../syn-master/synthetic.js"></script>
+        <script type="text/javascript" src="../syn-master/mouse.js"></script>
+        <script type="text/javascript" src="../syn-master/browsers.js"></script>
+        <script type="text/javascript" src="../syn-master/key.js"></script>
+        <script type="text/javascript" src="../../libs/VldRulesLib-1.0.1.js"></script>
+        <script type="text/javascript" src="../../validator-1.0.1.js"></script>
+        <script type="text/javascript" src="test-validator.js"></script>
     </body>
 </html>

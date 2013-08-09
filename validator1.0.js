@@ -1,31 +1,62 @@
-define(function(require,exports,module){
+/*
+ *validator.js 表单验证器
+ *@author：maxiupeng
+ *@date:2013-8-1
+ */
+define("Validator",function(require,exports,module){
     require("jquery");
-    require("limiter");
+    var VldRulesLib = require("VldRulesLib");
+    var limiter = require("limiter");
 
-    var limiter = require("VldRulesLib");
+    // / *获取光标位置插件 */
+    // $.fn.extend({
+    //     position:function( value ){
+    //         var elem = this[0];
+    //             if (elem&&(elem.tagName=="TEXTAREA"||elem.type.toLowerCase()=="text")) {
+    //                if($.browser.msie){
+    //                        var rng;
+    //                        if(elem.tagName == "TEXTAREA"){ 
+    //                             rng = event.srcElement.createTextRange();
+    //                             rng.moveToPoint(event.x,event.y);
+    //                        }else{ 
+    //                             rng = document.selection.createRange();
+    //                        }
+    //                        if( value === undefined ){
+    //                          rng.moveStart("character",-event.srcElement.value.length);
+    //                          return  rng.text.length;
+    //                        }else if(typeof value === "number" ){
+    //                          var index=this.position();
+    //                          index>value?( rng.moveEnd("character",value-index)):(rng.moveStart("character",value-index))
+    //                          rng.select();
+    //                        }
+    //                 }else{
+    //                     if( value === undefined ){
+    //                          return elem.selectionStart;
+    //                        }else if(typeof value === "number" ){
+    //                          elem.selectionEnd = value;
+    //                          elem.selectionStart = value;
+    //                        }
+    //                 }
+    //             }else{
+    //                 if( value === undefined )
+    //                    return undefined;
+    //             }
+    //     }
+    // })
 
-    /*
-     *validator.js 表单验证器
-     *@author：maxiupeng
-     *@date:2013-7-24
-     */
+    
 
-    var checkInterval = 100;
+    var CHECK_INTERVAL = 100;
 
     /* for debug，使用delegate还是直接绑定，有待商议 */
     var delegate = true;
-
-    /* 获取浏览器类型 */
-    var browser = {
-        ie: $.browser.msie
-    };
 
     /* Validator命名空间 */
     $.Validator = {};
 
     /* 默认参数 */
     $.Validator.defaults = {
-        vldOnclick: null, //type：$selector,点击某个button时验证
+        vldOnclick: null, //type:$selector或$元素,点击某个button时验证
         vldOnBlur: false, //元素失去焦点时验证
         vldOnEnter: false, //input中按下enter时验证
         checkOnError: true, //当前input内的数据不合法时自动验证数据
@@ -38,12 +69,12 @@ define(function(require,exports,module){
         tipDir: "right", //错误tip的显示位置，可选up,down left,right,关闭tip的话设置为false
         tipOffset: null, //错误tip显示位置的偏移量，需要包含left和top
         defaultMsg: "输入有误，请重新输入", //默认的错误提示信息
-        trigger: null, //验证触发器，数组类型，每个元素包括元素ID和时间名称
+        trigger: null, //验证触发器，数组类型，每个元素包括元素ID和事件名称
         parent: "body" //父节点$selector,为空的话自动指定为body
     }
 
     /*
-     * validate 定义
+     * validator 定义
      * @param:validations {array}  应用到当前form中所有field的规则
      *                                 eg:[{
                                        field:'userName',
@@ -57,23 +88,22 @@ define(function(require,exports,module){
      * @param:opts {object}        选项
      */
     $.Validator.validator = function(validations, opts) {
+        if (!validations || !validations.length) return true;
         this.opts = $.extend({}, $.Validator.defaults, opts);
         this.errorMsg = {}; //集中显示的错误信息
         this.hasRel = false; //各个field之间是否存在关联性
         this.relations = {}; //储存各field之间的关联
-        this._this = this;
+        //this._this = this;
         this.dynamicVlds = []; //需要动态验证的validation列表
         this.validations = validations;
-        if (validations.length == 0) return true;
-        this.start();
+        this._init();
     };
-
     var Validator = $.Validator.validator;
 
     /*
      * 启动
      */
-    Validator.prototype.start = function() {
+    Validator.prototype._init = function() {
         /* 映射实例变量为局部变量 */
         var opts = this.opts;
         var errorMsg = this.errorMsg;
@@ -82,24 +112,33 @@ define(function(require,exports,module){
         var validations = this.validations;
         var _this = this;
 
+        /* 设置$button */
+        opts.$button = $(opts.vldOnclick);
+
+        opts.$errorField = $(opts.errorField);
+
+        opts.$parent = $(opts.parent);
+
         /* jQuery元素拆分 */
         for(var i = 0; i < validations.length; i++){
             if(validations[i].field.constructor == jQuery && validations[i].field.length > 1){
                 for(var j = 0; j < validations[i].field.length; j++){
-                    var vld = $.extend({},validations[i]);
-                    if(!validations[i].field[j].getAttribute("id")){
-                        validations[i].field[j].setAttribute("id",$.Validator.randomString(10));
-                    }
-                    vld.field = $(validations[i].field.selector + "#" + validations[i].field[j].getAttribute("id"));
+                    // var vld = $.extend({},validations[i]);
+                    // if(!validations[i].field[j].getAttribute("id")){
+                    //     validations[i].field[j].setAttribute("id",$.Validator.randomString(10));
+                    // }
+                    //vld.field = $(validations[i].field.selector + "#" + validations[i].field[j].getAttribute("id"));
                     validations.push(vld);
                 }
                 validations.shift(i);
             }
         }
 
-        /* 设置limiter、passed属性、hasRel属性、$el、id、动态验证 */
+        /* 设置limiter、passed属性、hasRel属性、$el、$errorLoc、id、动态验证 */
         for (var i = 0; i < validations.length; i++) {
             validations[i].passed = true;
+
+            /* 设置$el */
             if(validations[i].field.constructor == jQuery){
                 validations[i].$el = validations[i].field;
                 validations[i].randomId = $.Validator.randomString(10);
@@ -107,9 +146,15 @@ define(function(require,exports,module){
                 validations[i].$el = $("#" + validations[i].field);
                 validations[i].randomId = $.Validator.randomString(10);
             }
+
             if(!validations[i].$el.attr("id")){
                 validations[i].$el.attr("id", validations[i].randomId);
             }
+
+            /* 设置$errorLoc */
+            validations[i].$errorLoc = $(validations[i].errorLoc);
+
+
             
             /*关联检查功能，暂不可用
             if (validations[i].rule.constructor == RegExp || (typeof validations[i].rule) == "function") {
@@ -129,8 +174,8 @@ define(function(require,exports,module){
         }
 
         /* 绑定button的onclick */
-        if (opts.vldOnclick) {
-            $(opts.vldOnclick).bind('click', function(){
+        if (opts.$button) {
+            opts.$button.bind('click', function(){
                 _this.validateAll()
             });
         }
@@ -139,7 +184,7 @@ define(function(require,exports,module){
         if (opts.vldOnBlur || opts.vldOnEnter) {
             for (var i = 0; i < validations.length; i++) {
                 if (opts.vldOnBlur) {
-                    $(opts.parent).delegate(validations[i].$el.selector, "blur", {
+                    opts.$parent.delegate(validations[i].$el.selector, "blur", {
                         index: i,
                         field: validations[i].field
                     }, function(e){
@@ -147,7 +192,7 @@ define(function(require,exports,module){
                     });
                 }
                 if (opts.vldOnEnter) {
-                    $(opts.parent).delegate(validations[i].$el.selector, "keyup", {
+                    opts.$parent.delegate(validations[i].$el.selector, "keyup", {
                         index: i,
                         field: validations[i].field
                     }, function(e){
@@ -174,7 +219,7 @@ define(function(require,exports,module){
                     for (var i = 0; i < dynamicVlds.length; i++) {
                         _this.dynamicCheck(dynamicVlds[i]);
                     }
-                }, checkInterval);
+                }, CHECK_INTERVAL);
             }
             //出错时检验的定时器
             if (opts.checkOnError) {
@@ -188,7 +233,7 @@ define(function(require,exports,module){
                             }
                         }
                     }
-                }, checkInterval);
+                }, CHECK_INTERVAL);
             }
         } else { //keydown和paste代替timer
             for (var i = 0; i < validations.length; i++) {
@@ -204,10 +249,10 @@ define(function(require,exports,module){
      */
     Validator.prototype.initDynamicVld = function(vld){
         var _this = this;
-        if(browser.ie){//IE
+        if($.browser.msie){//IE
             if(delegate){
                 //delegate
-                $(_this.opts.parent).delegate(vld.$el.selector, "keydown", {vld: vld}, function(e) {
+                _this.opts.$parent.delegate(vld.$el.selector, "keydown", {vld: vld}, function(e) {
                     setTimeout(function() {
                         // _this.dynamicCheck(_this.getValidation(e.target.id));
                         _this.dynamicCheck(e.data.vld);
@@ -225,7 +270,7 @@ define(function(require,exports,module){
         } else {//非IE
             if(delegate){
                 //delegate
-                $(_this.opts.parent).delegate(vld.$el.selector, "input", {vld: vld}, function(e) {
+                _this.opts.$parent.delegate(vld.$el.selector, "input", {vld: vld}, function(e) {
                     setTimeout(function() {
                         // _this.dynamicCheck(_this.getValidation(e.target.id));
                         _this.dynamicCheck(e.data.vld);
@@ -245,7 +290,7 @@ define(function(require,exports,module){
         
         if(delegate){
             //delegate
-            $(_this.opts.parent).delegate(vld.$el.selector, "paste", {vld: vld}, function(e){
+            _this.opts.$parent.delegate(vld.$el.selector, "paste", {vld: vld}, function(e){
                 setTimeout(function(){
                     // _this.dynamicCheck(_this.getValidation(e.target.id));
                     _this.dynamicCheck(e.data.vld);
@@ -263,19 +308,6 @@ define(function(require,exports,module){
     }
 
     /*
-     * 根据元素id从validations获取其对应的validation
-     */
-    // Validator.prototype.getValidation = function(id){
-    //  var validations = this.validations;
-    //     for(var i = 0, len = validations.length; i < len; i++){
-    //         if(validations[i].field == id){
-    //             return validations[i];
-    //         }
-    //     }
-    //     return null;
-    // }
-
-    /*
      * 动态验证,方便callee识别
      */
     Validator.prototype.dynamicCheck = function(vld){
@@ -284,7 +316,6 @@ define(function(require,exports,module){
 
     /*
      * 用于绑定单个input的blur、change事件
-     * @param e {object} 事件
      */
 
     Validator.prototype.check = function(index) {
@@ -347,7 +378,7 @@ define(function(require,exports,module){
         if(!flag){
             for (var i = 0; i < validations.length; i++) {
                 if (validations[i].passed == false) {
-                    $(validations[i].$el).focus();
+                    validations[i].$el.focus();
                     return false;
                 }
             }
@@ -361,7 +392,8 @@ define(function(require,exports,module){
      * @param validation {object} 目标验证规则，通过此validation.field指定目标field
      */
     Validator.prototype.validateRel = function(validation) {
-        /* 暂时不可用
+        // 暂时不可用
+        /*
         if (!relations[validation.field]) { //创建关系数组
             relations[validation.field] = [validation];
             for (var i = 0; i < validations.length; i++) {
@@ -430,9 +462,10 @@ define(function(require,exports,module){
         var rule = validation.rule;
         if(rule.indexOf("#") != -1){
             rule = rule.replace(/#[a-zA-Z0-9_]+/ig,function(val,index,original){
-                return "0" + $(val)[0].value + "";
+                return $(val)[0].value + " ";
             });
         }
+
         if(arguments.callee.caller == _this.dynamicCheck){
             var result = VldRulesLib.validate(value, rule, "", msg, ok, error);
             if(!result.result){
@@ -447,17 +480,11 @@ define(function(require,exports,module){
         function ok() {
             validation.passed = true;
             if (errorLoc) {
-                var $errorLoc = null;
-                if (errorLoc.indexOf('#') != -1) {
-                    $errorLoc = $(errorLoc);
-                } else {
-                    $errorLoc = $('#' + errorLoc);
-                }
-                $errorLoc.html("");
+                validation.$errorLoc.html("");
                 if(opts.errorLocClass){
-                    $errorLoc.removeClass(opts.errorLocClass);
+                    validation.$errorLoc.removeClass(opts.errorLocClass);
                 }else{
-                    $errorLoc.hide();
+                    validation.$errorLoc.hide();
                 }
             }
             if (tipDir || opts.tipDir) {
@@ -475,17 +502,11 @@ define(function(require,exports,module){
             validation.passed = false;
             validation.onError = true; //在onblur中设置
             if (errorLoc) {
-                var $errorLoc = null;
-                if (errorLoc.indexOf('#') != -1) {
-                    $errorLoc = $(errorLoc);
-                } else {
-                    $errorLoc = $('#' + errorLoc);
-                }
-                $errorLoc.html(msg);
+                validation.$errorLoc.html(msg);
                 if(opts.errorLocClass){
-                    $errorLoc.addClass(opts.errorLocClass);
+                    validation.$errorLoc.addClass(opts.errorLocClass);
                 }else{
-                    $errorLoc.show();
+                    validation.$errorLoc.show();
                 }
             } else {
                 errorMsg[randomId] = msg;
@@ -494,10 +515,10 @@ define(function(require,exports,module){
 
             if(opts.checkOnError && !opts.timer && !validation.binded){
                 validation.binded = true;
-                if(browser.ie){//IE
+                if($.browser.msie){//IE
                     if(delegate){
                         //delegate
-                        $(opts.parent).delegate($el.selector, "keydown", {vld: validation}, function(e) {
+                        opts.$parent.delegate($el.selector, "keydown", {vld: validation}, function(e) {
                             setTimeout(function() {
                                 _this.validate(e.data.vld);
                             }, 0);
@@ -514,7 +535,7 @@ define(function(require,exports,module){
                 } else {//非IE
                     if(delegate){
                         //delegate
-                        $(opts.parent).delegate($el.selector, "input", {vld: validation}, function(e) {
+                        opts.$parent.delegate($el.selector, "input", {vld: validation}, function(e) {
                             setTimeout(function() {
                                 _this.validate(e.data.vld);
                             }, 0);
@@ -531,7 +552,7 @@ define(function(require,exports,module){
                 
                 if(delegate){
                     //delegate
-                    $(opts.parent).delegate($el.selector, "paste", {vld: validation}, function(e) {
+                    opts.$parent.delegate($el.selector, "paste", {vld: validation}, function(e) {
                         setTimeout(function() {
                             _this.validate(e.data.vld);
                         }, 0);
@@ -551,8 +572,7 @@ define(function(require,exports,module){
                 var errTip = $(opts.errTipTpl.replace("{{id}}",randomId + "_errTip")
                              .replace("{{zindex}}",$.Validator.getZIndex($el))
                              .replace("{{message}}",msg));
-                var parent = opts.parent?opts.parent:"body";
-                $(parent).append(errTip);
+                opts.$parent.append(errTip);
                 $.Validator.setTipLoc($el, errTip, tipDir, offsetLeft, offsetTop, opts);
             }
 
@@ -578,7 +598,7 @@ define(function(require,exports,module){
             }
         }
         if (opts.errorField) {
-            $("#" + opts.errorField).html(msg);
+            opts.$errorField.html(msg);
         } 
     }
 
@@ -615,7 +635,6 @@ define(function(require,exports,module){
      */
 
     $.Validator.setTipLoc = function($el, tip, tipDir, left, top, opts) {
-        //为了协调$.fn.Validator和$.Validator的使用。应该有更好的办法
         if(opts == null||opts == undefined){
             opts = {
                 tipDir:null,
@@ -650,7 +669,7 @@ define(function(require,exports,module){
     }
 
 
-    //获取元素的z-index坐标
+    //获取元素的z-index
     $.Validator.getZIndex = function($elm){
         if($elm[0].tagName == "BODY"){
             return 1;
@@ -685,7 +704,8 @@ define(function(require,exports,module){
 
     $.fn.validator = function(validation){
         validation.field = this;
-        return new $.Validator.validator(validation,validation);
+        var vld = new $.Validator.validator(validation,validation);
+        return this;
     };
 
     module.exports = Validator;
