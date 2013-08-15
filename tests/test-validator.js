@@ -153,7 +153,7 @@ define(function(require,exports,model){
             },
             timer: false,
             parent: $(".outer").first(),
-            revisedVal: true
+            autoRevise: true
             //listenScroll:false,
         });
 
@@ -340,7 +340,7 @@ define(function(require,exports,model){
 
         //equal
         init("equal");
-        testStyleVal("非法字符,数值正确", false, "0.5AAAA!@#$^&*", "0.5AAAA!@#$^&*");
+        testStyleVal("非法字符,数值正确", true, "0.A5AAAA!@#$^&*", "0.A5AAAA!@#$^&*");
 
         //le
         init("le");

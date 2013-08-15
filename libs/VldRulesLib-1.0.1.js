@@ -15,316 +15,292 @@ function defineVldRulesLib(window){
     /* 规则集合 */
     VldRulesLib.rules = {};
 
+    /* 规则名集合 */
+    VldRulesLib.RULES = {};
+
+    /* 扩展规则 */
+    VldRulesLib.extend = function(ruleName, needArgs, check, revise) {
+        if (!check) {
+            throw new Error("扩展规则错误，至少需要包含check方法");
+        }
+        if(needArgs){
+            VldRulesLib.RULES[ruleName] = function(args){
+                return VldRulesLib.getRuleStr(ruleName,args);
+            };
+        } else {
+            VldRulesLib.RULES[ruleName] = ruleName;
+        }
+        VldRulesLib.rules[ruleName] = {
+            check: check,
+            revise: revise
+        }
+    };  
+
+    /* 生成规则字符串 */
+    VldRulesLib.getRuleStr = function(ruleName,args){
+        if(args !== undefined){
+            return ruleName + "[" + args + "]";
+        } else {
+            return ruleName;
+        }
+    }
+
     /* 必填 */
-    VldRulesLib.rules.required = {
-        check: /.+/
-    };
+    VldRulesLib.extend("required",false,/.+/);
 
     /* email */
-    VldRulesLib.rules.email = {
-        check: /^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+$/
-    };
+    VldRulesLib.extend("email",false,/^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+$/);
 
     /* 数字,参数为小数位数 */
-    VldRulesLib.rules.number = {
-        check: function(value, args) {
-            if (args && typeof parseInt(args) == 'number') {
-                return (new RegExp("^-?[\\d]*(\\.[\\d]{0," + args + "})?$")).test(value);
-            }
-            return /^-?[\d]*(\.[\d]*)?$/g.test(value);
-        },
-        revise: function(value, args) {
-            var reg1Str = "";
-            if (args) {
-                reg1Str = "(\\.\\d{0," + args + "})(\\d*)";
-            } else {
-                reg1Str = "(\\d*)";
-            }
-            var reg1 = new RegExp(reg1Str, "g");
-
-            //去除非.-\d字符
-            var newVal = value.replace(/[^\d\.-]/ig, "");
-            //去除非首位的-
-            newVal = newVal.charAt(0) + newVal.substr(1, newVal.length - 1).replace(/-/g, "");
-            //去除多余小数点
-            var indexOfDot = newVal.indexOf(".");
-            if (indexOfDot != -1) {
-                var pureDigits = newVal.substr(indexOfDot, newVal.length).replace(/\./g, "");
-                newVal = newVal.substr(0, indexOfDot) + "." + pureDigits;
-            }
-            //去除多余小数位数
-            newVal = newVal.replace(reg1, "$1");
-
-            return newVal;
+    VldRulesLib.extend("number", true, function(value, args) {
+        if (args && typeof parseInt(args) == 'number') {
+            return (new RegExp("^-?[\\d]*(\\.[\\d]{0," + args + "})?$")).test(value);
         }
-    };
+        return /^-?[\d]*(\.[\d]*)?$/g.test(value);
+    }, function(value, args) {
+        var reg1Str = "";
+        if (args) {
+            reg1Str = "(\\.\\d{0," + args + "})(\\d*)";
+        } else {
+            reg1Str = "(\\d*)";
+        }
+        var reg1 = new RegExp(reg1Str, "g");
+
+        //去除非.-\d字符
+        var newVal = value.replace(/[^\d\.-]/ig, "");
+        //去除非首位的-
+        newVal = newVal.charAt(0) + newVal.substr(1, newVal.length - 1).replace(/-/g, "");
+        //去除多余小数点
+        var indexOfDot = newVal.indexOf(".");
+        if (indexOfDot != -1) {
+            var pureDigits = newVal.substr(indexOfDot, newVal.length).replace(/\./g, "");
+            newVal = newVal.substr(0, indexOfDot) + "." + pureDigits;
+        }
+        //去除多余小数位数
+        newVal = newVal.replace(reg1, "$1");
+
+        return newVal;
+    });
 
     /* 最小长度 */
-    VldRulesLib.rules.min = {
-        check: function(value, args) {
-            return value.length >= args ? true : false;
+    VldRulesLib.extend("min", true, function(value, args) {
+        if (!args) {
+            throw new Error("参数错误!");
+            return false;
         }
-    };
+        return value.length >= args ? true : false;
+    });
 
     /* 最大长度 */
-    VldRulesLib.rules.max = {
-        check: function(value, args) {
-            return value.length <= args ? true : false;
-        },
-        revise: function(value, args) {
-            return value.substr(0, args);
+    VldRulesLib.extend("max", true, function(value, args) {
+        if (!args) {
+            throw new Error("参数错误!");
+            return false;
         }
-    };
+        return value.length <= args ? true : false;
+    }, function(value, args) {
+        return value.substr(0, args);
+    });
 
     /* 小于 */
-    VldRulesLib.rules.lt = {
-        check: function(value, args) {
-            if (!VldRulesLib.validate(value, ["number"]).passed) {
-                return false;
-            }
-            return parseFloat(value) < parseFloat(args) ? true : false;
-        },
-        revise: VldRulesLib.rules.number.revise
-    };
+    VldRulesLib.extend("lt", true, function(value, args) {
+        if (!VldRulesLib.validate(value, ["number"]).passed || !VldRulesLib.validate(args, ["number"]).passed) {
+            return false;
+        }
+        return parseFloat(value) < parseFloat(args) ? true : false;
+    }, VldRulesLib.rules.number.revise);
 
     /* 大于 */
-    VldRulesLib.rules.gt = {
-        check: function(value, args) {
-            if (!VldRulesLib.validate(value, ["number"]).passed) {
-                return false;
-            }
-            return parseFloat(value) > parseFloat(args) ? true : false;
-        },
-        revise: function(value, args) {
-            if (parseFloat(args) >= 0) {
-                value = value.replace("-", "");
-            }
-            return VldRulesLib.rules.number.revise(value);
+    VldRulesLib.extend("gt", true, function(value, args) {
+        if (!VldRulesLib.validate(value, ["number"]).passed || !VldRulesLib.validate(args, ["number"]).passed) {
+            return false;
         }
-    };
-
+        return parseFloat(value) > parseFloat(args) ? true : false;
+    }, function(value, args) {
+        if (parseFloat(args) >= 0) {
+            value = value.replace("-", "");
+        }
+        return VldRulesLib.rules.number.revise(value);
+    });
+    
     /* 小于等于 */
-    VldRulesLib.rules.le = {
-        check: function(value, args) {
-            if (!VldRulesLib.validate(value, ["number"]).passed) {
-                return false;
-            }
-            return parseFloat(value) <= parseFloat(args) ? true : false;
-        },
-        revise: function(value, args) {
-            value = VldRulesLib.rules.number.revise(value);
-            if (parseFloat(value) > parseFloat(args)) {
-                return args;
-            }
-            return value;
+    VldRulesLib.extend("le", true, function(value, args) {
+        if (!VldRulesLib.validate(value, ["number"]).passed || !VldRulesLib.validate(args, ["number"]).passed) {
+            return false;
         }
-    };
-
+        return parseFloat(value) <= parseFloat(args) ? true : false;
+    }, function(value, args) {
+        value = VldRulesLib.rules.number.revise(value);
+        if (parseFloat(value) > parseFloat(args)) {
+            return args;
+        }
+        return value;
+    });
+    
     /* 大于等于 */
-    VldRulesLib.rules.ge = {
-        check: function(value, args) {
-            if (!VldRulesLib.validate(value, ["number"]).passed) {
-                return false;
-            }
-            return parseFloat(value) >= parseFloat(args) ? true : false;
-        },
-        revise: function(value, args) {
-            if (parseFloat(args) >= 0) {
-                value = value.replace("-", "");
-            }
-            return VldRulesLib.rules.number.revise(value);
+    VldRulesLib.extend("ge", true, function(value, args) {
+        if (!VldRulesLib.validate(value, ["number"]).passed || !VldRulesLib.validate(args, ["number"]).passed) {
+            return false;
         }
-    };
+        return parseFloat(value) >= parseFloat(args) ? true : false;
+    }, function(value, args) {
+        if (parseFloat(args) >= 0) {
+            value = value.replace("-", "");
+        }
+        return VldRulesLib.rules.number.revise(value);
+    });
 
     /* 等于 */
-    VldRulesLib.rules.equal = {
-        check: function(value, args) {
-            return parseFloat(value) == parseFloat(args) ? true : false;
+    VldRulesLib.extend("equal", true, function(value, args) {
+        if (!VldRulesLib.validate(value, ["number"]).passed || !VldRulesLib.validate(args, ["number"]).passed) {
+            return false;
         }
-    };
+        return parseFloat(value) == parseFloat(args) ? true : false;
+    });
 
     /* 字符串等于 */
-    VldRulesLib.rules.strEqual = {
-        check: function(value, args) {
-            return value.toString() == args.toString() ? true : false;
-        }
-    };
-
+    VldRulesLib.extend("strEqual", true, function(value, args) {
+        return value.toString() == args.toString() ? true : false;
+    });
+    
     /* 座机电话号码 */
-    VldRulesLib.rules.phone = {
-        check: /^((\(\d{2,3}\))|(\d{3}\-))?(\(0\d{2,3}\)|0\d{2,3}-)?[1-9]\d{6,7}(\-\d{1,4})?$/,
-        revise: function(value){
+    VldRulesLib.extend("phone", false,
+        /^((\(\d{2,3}\))|(\d{3}\-))?(\(0\d{2,3}\)|0\d{2,3}-)?[1-9]\d{6,7}(\-\d{1,4})?$/,
+        function(value) {
             return value.replace(/[^0-9\-\(\)\s]/ig, "");
-        }
-    };
+        });
 
     /* 手机号码 */
-    VldRulesLib.rules.mobile = {
-        check: /^((\(\d{2,3}\))|(\d{3}\-))?1\d{10}$/,
-        revise: function(value){
-            return value.replace(/[^0-9\-\s\(\)]/ig, "");
-        }
-    };
+    VldRulesLib.extend("mobile", false, /^((\(\d{2,3}\))|(\d{3}\-))?1\d{10}$/, function(value) {
+        return value.replace(/[^0-9\-\s\(\)]/ig, "");
+    });
 
     /* url,参数为协议名,如http,多个协议用|连接.为空表示不限 */
-    VldRulesLib.rules.url = {
-        check:function(value,args){
-            var pro = args ? args + "://" : "([a-z]{0,5}://)?";
-            var regStr = '^' + pro + '(([0-9a-z_!~*\'().&=+$%-]+: )?[0-9a-z_!~*\'().&=+$%-]+@)?' //ftp的user@
-            + '(([0-9]{1,3}.){3}[0-9]{1,3}' // IP形式的URL- 199.194.52.184
-            + '|' // 允许IP和DOMAIN（域名）
-            + '([0-9a-z_!~*\'()-]+.)*' // 域名- www.
-            + '([0-9a-z][0-9a-z-]{0,61})?[0-9a-z].' // 二级域名
-            + '[a-z]{2,6})' // first level domain- .com or .museum
-            + '(:[0-9]{1,4})?' // 端口- :80
-            + '((/?)|' // a slash isn't required if there is no file name
-            + '(/[0-9a-z_!~*\'().;?:@&=+$,%#-]+)+/?)$';
-            return (new RegExp(regStr)).test(value.toLowerCase());
-        }
-    };
+    VldRulesLib.extend("url", true, function(value, args) {
+        var pro = args ? args + "://" : "([a-z]{0,5}://)?";
+        var regStr = '^' + pro + '(([0-9a-z_!~*\'().&=+$%-]+: )?[0-9a-z_!~*\'().&=+$%-]+@)?' //ftp的user@
+        + '(([0-9]{1,3}.){3}[0-9]{1,3}' // IP形式的URL- 199.194.52.184
+        + '|' // 允许IP和DOMAIN（域名）
+        + '([0-9a-z_!~*\'()-]+.)*' // 域名- www.
+        + '([0-9a-z][0-9a-z-]{0,61})?[0-9a-z].' // 二级域名
+        + '[a-z]{2,6})' // first level domain- .com or .museum
+        + '(:[0-9]{1,4})?' // 端口- :80
+        + '((/?)|' // a slash isn't required if there is no file name
+        + '(/[0-9a-z_!~*\'().;?:@&=+$,%#-]+)+/?)$';
+        return (new RegExp(regStr)).test(value.toLowerCase());
+    });
 
     /* 数字字母 */
-    VldRulesLib.rules.alphanumeric = {
-        check: /^[A-Za-z0-9]*$/,
-        revise: function(value){
-            return value.replace(/[^a-zA-Z0-9]/ig, "");
-        }
-    };
+    VldRulesLib.extend("alphanumeric", false, /^[A-Za-z0-9]*$/, function(value) {
+        return value.replace(/[^a-zA-Z0-9]/ig, "");
+    });
 
     /* 数字字母下划线 */
-    VldRulesLib.rules.alphanumeric_underline = {
-        check: /^[a-zA-Z0-9_]*$/,
-        revise: function(value){
-            return value.replace(/[^a-zA-Z0-9_]/ig, "");
-        }
-    };
+    VldRulesLib.extend("alphanumeric_underline", false, /^[a-zA-Z0-9_]*$/, function(value) {
+        return value.replace(/[^a-zA-Z0-9_]/ig, "");
+    });
 
     /* 整型数字,参数为数字位数 */
-    VldRulesLib.rules.num_int = {
-        check:function(value,args){
-            if(args){
-                regStr = "^-?[\\d]{0," + args + "}$";
-            } else {
-                regStr = "^-?[\\d]+$";
-            }
-            var reg = new RegExp(regStr,"g");
-            return reg.test(value);
-        },
-        revise: function(value,args){
-            var reg1Str = "";
-            if(args){
-                reg1Str = "(\\d{0," + args + "})\\d*";
-            } else {
-                reg1Str = "(\\d*)";
-            }
-            var reg1 = new RegExp(reg1Str,"g");
-            //去除非法字符
-            var newVal = value.replace(/[^\d-]/ig, "");
-            //去除第一个之外的负号
-            newVal = newVal.charAt(0) + newVal.substr(1, newVal.length - 1).replace(/-/g, "");
-            //截断
-            newVal = newVal.replace(reg1,"$1");
-            return newVal;
+    VldRulesLib.extend("num_int", true, function(value, args) {
+        if (args) {
+            regStr = "^-?[\\d]{0," + args + "}$";
+        } else {
+            regStr = "^-?[\\d]+$";
         }
-    };
+        var reg = new RegExp(regStr, "g");
+        return reg.test(value);
+    }, function(value, args) {
+        var reg1Str = "";
+        if (args) {
+            reg1Str = "(\\d{0," + args + "})\\d*";
+        } else {
+            reg1Str = "(\\d*)";
+        }
+        var reg1 = new RegExp(reg1Str, "g");
+        //去除非法字符
+        var newVal = value.replace(/[^\d-]/ig, "");
+        //去除第一个之外的负号
+        newVal = newVal.charAt(0) + newVal.substr(1, newVal.length - 1).replace(/-/g, "");
+        //截断
+        newVal = newVal.replace(reg1, "$1");
+        return newVal;
+    });
 
     /* 小数数字,参数为小数位数 */
-    VldRulesLib.rules.num_float = {
-        check: function(value,args){
-            if(args){
-                regStr = "^-?[\\d]*\\.[\\d]{0," + args + "}$";
-            } else {
-                regStr = "^-?[\\d]*\\.[\\d]*$";
-            }
-            var reg = new RegExp(regStr,"g");
-            return reg.test(value);
-        },
-        revise: function(value,args){
-            var reg1Str = "";
-            if(args){
-                reg1Str = "(\\.\\d{0," + args + "})(\\d*)";
-            } else {
-                reg1Str = "(\\.\\d*)";
-            }
-            var reg1 = new RegExp(reg1Str,"g");
-            //去除非法字符
-            var newVal = value.replace(/[^\d-\.]/ig, "");
-            //去除第一个之外的负号
-            newVal = newVal.charAt(0) + newVal.substr(1, newVal.length - 1).replace(/-/g, "");
-            //截断
-            newVal = newVal.replace(reg1,"$1");
-            return newVal;
+    VldRulesLib.extend("num_float", true, function(value, args) {
+        if (args) {
+            regStr = "^-?[\\d]*\\.[\\d]{0," + args + "}$";
+        } else {
+            regStr = "^-?[\\d]*\\.[\\d]*$";
         }
-    };
+        var reg = new RegExp(regStr, "g");
+        return reg.test(value);
+    }, function(value, args) {
+        var reg1Str = "";
+        if (args) {
+            reg1Str = "(\\.\\d{0," + args + "})(\\d*)";
+        } else {
+            reg1Str = "(\\.\\d*)";
+        }
+        var reg1 = new RegExp(reg1Str, "g");
+        //去除非法字符
+        var newVal = value.replace(/[^\d-\.]/ig, "");
+        //去除第一个之外的负号
+        newVal = newVal.charAt(0) + newVal.substr(1, newVal.length - 1).replace(/-/g, "");
+        //截断
+        newVal = newVal.replace(reg1, "$1");
+        return newVal;
+    });
 
     /* 一级密码,包含字母,数字 */
-    VldRulesLib.rules.pwdl1 = {
-        check: function(value){
-            var re1 = /[a-zA-Z]+/g;
-            var re2 = /[0-9]+/g;
-            return re1.test(value) && re2.test(value);
-        }
-    };
+    VldRulesLib.extend("pwdl1", false, function(value) {
+        var re1 = /[a-zA-Z]+/g;
+        var re2 = /[0-9]+/g;
+        return re1.test(value) && re2.test(value);
+    });
 
     /* 二级密码,包含大小写字母,数字 */
-    VldRulesLib.rules.pwdl2 = {
-        check: function(value){
-            var re1 = /[a-z]+/g;
-            var re2 = /[A-Z]+/g;
-            var re3 = /[0-9]+/g;
-            return re1.test(value) && re2.test(value) && re3.test(value);
-        }
-    };
+    VldRulesLib.extend("pwdl2", false, function(value) {
+        var re1 = /[a-z]+/g;
+        var re2 = /[A-Z]+/g;
+        var re3 = /[0-9]+/g;
+        return re1.test(value) && re2.test(value) && re3.test(value);
+    });
 
     /* 三级密码,包含大小写字母,数字,符号 */
-    VldRulesLib.rules.pwdl3 = {
-        check: function(value){
-            var re1 = /[a-z]+/g;
-            var re2 = /[A-Z]+/g;
-            var re3 = /[0-9]+/g;
-            var re4 = /[~!@#$%^&*()_+=\-`\{\}|:\"<>\?\[\]\\;\',\.\/]+/g;
-            return re1.test(value) && re2.test(value) && re3.test(value) && re4.test(value);
-        }
-    };
+    VldRulesLib.extend("pwdl3", false, function(value) {
+        var re1 = /[a-z]+/g;
+        var re2 = /[A-Z]+/g;
+        var re3 = /[0-9]+/g;
+        var re4 = /[~!@#$%^&*()_+=\-`\{\}|:\"<>\?\[\]\\;\',\.\/]+/g;
+        return re1.test(value) && re2.test(value) && re3.test(value) && re4.test(value);
+    });
 
     /* 是否只包含单一空格,revise将多个连续空格合并成一个 */
-    VldRulesLib.rules.singlespace = {
-        check: function(value){
-            return !/[\s]{2,}/g.test(value);
-        },
-        revise: function(value){
-            return value.replace(/[\s]{2,}/g," ");
-        }
-    };
+    VldRulesLib.extend("singlespace", false, function(value) {
+        return !/[\s]{2,}/g.test(value);
+    }, function(value) {
+        return value.replace(/[\s]{2,}/g, " ");
+    });
 
     /* 纯字母 */
-    VldRulesLib.rules.alpha = {
-        check: /^[A-Za-z]*$/,
-        revise: function(value){
-            return value.replace(/[^A-Za-z]/ig, "");
-        }
-    };
+    VldRulesLib.extend("alpha", false, /^[A-Za-z]*$/, function(value) {
+        return value.replace(/[^A-Za-z]/ig, "");
+    });
 
     /* 字母下划线 */
-    VldRulesLib.rules.alpha_underline = {
-        check: /^[A-Za-z_]*$/,
-        revise: function(value){
-            return value.replace(/[^A-Za-z_]/ig, "");
-        }
-    };
+    VldRulesLib.extend("alpha_underline", false, /^[A-Za-z_]*$/, function(value) {
+        return value.replace(/[^A-Za-z_]/ig, "");
+    });
 
     /* 身份证号码 */
-    VldRulesLib.rules.idcard = {
-        check: /(^\d{15}$)|(^\d{17}([0-9]|X|x)$)/,
-        revise: function(value){
-            return value.replace(/[^\dXx]/g);
-        }
-    };
+    VldRulesLib.extend("idcard", false, /(^\d{15}$)|(^\d{17}([0-9]|X|x)$)/, function(value) {
+        return value.replace(/[^\dXx]/g);
+    });
 
     /* 日期 */
-    VldRulesLib.rules.date = {
-        check: /^\d{4}\-[01]?\d\-[0-3]?\d$|^[01]\d\/[0-3]\d\/\d{4}$|^\d{4}年[01]?\d月[0-3]?\d[日号]$/
-    };
+    VldRulesLib.extend("date", false, 
+        /^\d{4}\-[01]?\d\-[0-3]?\d$|^[01]\d\/[0-3]\d\/\d{4}$|^\d{4}年[01]?\d月[0-3]?\d[日号]$/);
 
     /*
      * textarea的rule格式为textarea[rows8&length10&noBlankLine&noRepeat&noBlankHead&noBlankRear]
@@ -336,124 +312,117 @@ function defineVldRulesLib(window){
      * noBlankHead:不允许每行首位空白
      * noBlankRear:不允许每行末尾空白
      */
-    VldRulesLib.rules.textarea = {
-        check:function(value,args){
-            var lines = value.match(/(.*\n)|(.*[^\n].*$)/g);
-            var cached = {};
-            var maxLength = -1;
-            var maxRows = -1;
-            var revisedVal = [];
-            var count = 0;
-            if(args.indexOf("length") != -1) {
-                maxLength = /length([\d]+)/.exec(args)[1];
-            }
-            if(args.indexOf("rows") != -1){
-                maxRows = /rows([\d]+)/.exec(args)[1];
-            }
-            for(var i = 0, len = lines.length; i < len; i++){
-                if(args.indexOf("noBlankLine") != -1) {
-                    if(/^[\s]*\n$/.test(lines[i])){
-                        return false;
-                    }
-                }
-                if(args.indexOf("noBlankHead") != -1) {
-                    if(/^[\s]+/.test(lines[i])){
-                        return false;
-                    }
-                }
-                if(args.indexOf("noBlankRear") != -1) {
-                    if(/[\s]+\n$/.test(lines[i])){
-                        return false;
-                    }
-                }
-                if(maxLength != -1) {
-                    if(lines[i].length > maxLength){
-                        return false;
-                    }
-                }
-                if(args.indexOf("noRepeat") != -1){
-                    if(cached[lines[i]]) {
-                        return false;
-                    }
-                }
-                if(lines[i] != ""){
-                    count++
-                }
-                if(maxRows != -1 && count > maxRows){
+    VldRulesLib.extend("textarea", true, function(value, args) {
+        var lines = value.match(/(.*\n)|(.*[^\n].*$)/g);
+        var cached = {};
+        var maxLength = -1;
+        var maxRows = -1;
+        var revisedVal = [];
+        var count = 0;
+        if (args.indexOf("length") != -1) {
+            maxLength = /length([\d]+)/.exec(args)[1];
+        }
+        if (args.indexOf("rows") != -1) {
+            maxRows = /rows([\d]+)/.exec(args)[1];
+        }
+        for (var i = 0, len = lines.length; i < len; i++) {
+            if (args.indexOf("noBlankLine") != -1) {
+                if (/^[\s]*\n$/.test(lines[i])) {
                     return false;
                 }
             }
-            return true;
-        },
-        revise: function(value,args){
-            var lines = value.match(/(.*\n)|(.*[^\n].*$)/g);
-            var cached = {};
-            var maxLength = -1;
-            var maxRows = -1;
-            var revisedVal = [];
-            var count = 0;
-            if(args.indexOf("length") != -1) {
-                maxLength = /length([\d]+)/.exec(args)[1];
+            if (args.indexOf("noBlankHead") != -1) {
+                if (/^[\s]+/.test(lines[i])) {
+                    return false;
+                }
             }
-            if(args.indexOf("rows") != -1){
-                maxRows = /rows([\d]+)/.exec(args)[1];
+            if (args.indexOf("noBlankRear") != -1) {
+                if (/[\s]+\n$/.test(lines[i])) {
+                    return false;
+                }
             }
-            for(var i = 0, len = lines.length; i < len; i++){
-                if(args.indexOf("noBlankLine") != -1) {
-                    lines[i] = lines[i].replace(/^[\s]*\n$/,"");
+            if (maxLength != -1) {
+                if (lines[i].length > maxLength) {
+                    return false;
                 }
-                if(args.indexOf("noBlankHead") != -1) {
-                    lines[i] = lines[i].replace(/^[\s]+/, "");
+            }
+            if (args.indexOf("noRepeat") != -1) {
+                if (cached[lines[i]]) {
+                    return false;
                 }
-                if(args.indexOf("noBlankRear") != -1) {
-                    lines[i] = lines[i].replace(/[\s]+\n$/, "\n");
-                }
-                if(maxLength != -1) {
-                    lines[i] = lines[i].substr(0,maxLength);
-                }
-                if(args.indexOf("noRepeat") != -1){
-                    if(cached[lines[i]]) {
-                        lines[i] = "";
-                    } else {
-                        cached[lines[i]] = true;
-                    }
-                }
-                if(lines[i] != ""){
-                    count++
-                }
-                if(maxRows != -1 && count > maxRows){
+            }
+            if (lines[i] != "") {
+                count++
+            }
+            if (maxRows != -1 && count > maxRows) {
+                return false;
+            }
+        }
+        return true;
+    }, function(value, args) {
+        var lines = value.match(/(.*\n)|(.*[^\n].*$)/g);
+        var cached = {};
+        var maxLength = -1;
+        var maxRows = -1;
+        var revisedVal = [];
+        var count = 0;
+        if (args.indexOf("length") != -1) {
+            maxLength = /length([\d]+)/.exec(args)[1];
+        }
+        if (args.indexOf("rows") != -1) {
+            maxRows = /rows([\d]+)/.exec(args)[1];
+        }
+        for (var i = 0, len = lines.length; i < len; i++) {
+            if (args.indexOf("noBlankLine") != -1) {
+                lines[i] = lines[i].replace(/^[\s]*\n$/, "");
+            }
+            if (args.indexOf("noBlankHead") != -1) {
+                lines[i] = lines[i].replace(/^[\s]+/, "");
+            }
+            if (args.indexOf("noBlankRear") != -1) {
+                lines[i] = lines[i].replace(/[\s]+\n$/, "\n");
+            }
+            if (maxLength != -1) {
+                lines[i] = lines[i].substr(0, maxLength);
+            }
+            if (args.indexOf("noRepeat") != -1) {
+                if (cached[lines[i]]) {
                     lines[i] = "";
-                }
-            }
-            return lines.join("");
-        }
-    };
-
-    /* 繁简转换 */
-    VldRulesLib.rules.trad2simp = {
-        check: function(value){
-            for(var i = 0; i < value.length; i++){
-                var charIndex = TRADITIONAL_CHAR.indexOf(value.charAt(i));
-                if(charIndex != -1){
-                    return false;
-                }
-            }
-            return true;
-        },
-        revise: function(value){
-            var newVal = [];
-            for(var i = 0; i < value.length; i++){
-                var charIndex = TRADITIONAL_CHAR.indexOf(value.charAt(i));
-                if(charIndex != -1){
-                    newVal.push(SIMPLIFIED_CHAR.charAt(charIndex));
                 } else {
-                    newVal.push(value.charAt(i));
+                    cached[lines[i]] = true;
                 }
             }
-            return newVal.join("");
+            if (lines[i] != "") {
+                count++
+            }
+            if (maxRows != -1 && count > maxRows) {
+                lines[i] = "";
+            }
         }
-    };
-
+        return lines.join("");
+    });
+    
+    /* 繁简转换 */
+    VldRulesLib.extend("trad2simp", false, function(value) {
+        for (var i = 0; i < value.length; i++) {
+            var charIndex = TRADITIONAL_CHAR.indexOf(value.charAt(i));
+            if (charIndex != -1) {
+                return false;
+            }
+        }
+        return true;
+    }, function(value) {
+        var newVal = [];
+        for (var i = 0; i < value.length; i++) {
+            var charIndex = TRADITIONAL_CHAR.indexOf(value.charAt(i));
+            if (charIndex != -1) {
+                newVal.push(SIMPLIFIED_CHAR.charAt(charIndex));
+            } else {
+                newVal.push(value.charAt(i));
+            }
+        }
+        return newVal.join("");
+    });
 
     /* 验证 */
     VldRulesLib.validate = function(value, rule) {
@@ -462,24 +431,24 @@ function defineVldRulesLib(window){
         var cpyValue = value; //记录每次revised后的value
 
         if (value == "") { //空值处理
-            $.each(rules, function(index, val) {
-                if (val.rule == "required" || val.rule == "min") {
+            for(var i = 0; i < rules.length; i++){
+                if(rules[i].rule == "required" || rules[i].rule == "min"){
                     details.push(false);
                 } else {
                     details.push(true);
                 }
-            });
+            }
         } else { //非空值
-            $.each(rules, function(index, val) {
-                if (VldRulesLib.rules[val.rule] && VldRulesLib.rules[val.rule].check) {
-                    var checkResult = typeof VldRulesLib.rules[val.rule].check == "function" ? VldRulesLib.rules[val.rule].check(value, val.args) : VldRulesLib.rules[val.rule].check.test(value);
-                    var revisedVal = VldRulesLib.rules[val.rule].revise != undefined ? VldRulesLib.rules[val.rule].revise(cpyValue, val.args) : cpyValue;
+            for(var i = 0; i < rules.length; i++){
+                if (VldRulesLib.rules[rules[i].rule] && VldRulesLib.rules[rules[i].rule].check) {
+                    var checkResult = typeof VldRulesLib.rules[rules[i].rule].check == "function" ? VldRulesLib.rules[rules[i].rule].check(value, rules[i].args) : VldRulesLib.rules[rules[i].rule].check.test(value);
+                    var revisedVal = VldRulesLib.rules[rules[i].rule].revise != undefined ? VldRulesLib.rules[rules[i].rule].revise(cpyValue, rules[i].args) : cpyValue;
                     cpyValue = revisedVal;
                     details.push(checkResult);
                 } else {
                     throw new Error("规则错误!");
                 }
-            });
+            }
         }
 
 
@@ -499,23 +468,12 @@ function defineVldRulesLib(window){
         };
     };
 
-    /* 扩展规则 */
-    VldRulesLib.extend = function(ruleName, check, revise) {
-        if (!check) {
-            throw new Error("扩展规则错误，至少需要包含check方法");
-        }
-        VldRulesLib.rules[ruleName] = {
-            check: check,
-            revise: revise
-        }
-    };
-
     /* 解析规则 */
     VldRulesLib._parseRule = function(rules) {
         var results = [];
         var reg = /^(\w+)(\[([\s\S]+)\])?$/;
-        $.each(rules, function(index, val) {
-            var result = reg.exec(val);
+        for(var i = 0; i < rules.length; i++){
+            var result = reg.exec(rules[i]);
             if (!result) {
                 throw new Error("规则错误");
             }
@@ -523,7 +481,7 @@ function defineVldRulesLib(window){
                 rule: result[1].toLowerCase(),
                 args: result[3]
             })
-        });
+        }
         return results;
     };
 

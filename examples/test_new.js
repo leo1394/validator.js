@@ -29,10 +29,11 @@ define(function(require,exports,module){
                 tipOffset: {
                     left: -50,
                 },
-                // limiter: {
-                //     wrapper: "#limiter_text1",
-                //     max: 10
-                // },
+                limiter: {
+                    wrapper: "#limiter_text1",
+                    max: 10,
+                    defaultTpl:"剩{remain}字节"
+                },
                 dynamicVld:true
             }, {
                 field: $("#text2"),
@@ -41,10 +42,10 @@ define(function(require,exports,module){
                 tipOffset: {
                     left: 50,
                 },
-                // limiter: {
-                //     wrapper: "#limiter_text2",
-                //     max: 10
-                // },
+                limiter: {
+                    wrapper: "#limiter_text2",
+                    max: 10
+                },
                 dynamicVld:true
             }, {
                 field: $("#email"),
@@ -53,16 +54,15 @@ define(function(require,exports,module){
                 tipOffset: {
                     left: 50
                 },
+                limiter: {
+                    wrapper: "#limiter_email",
+                    max: 20
+                }
             },{
                 field: "#number",
                 rule:["required","number[2]"],
                 msg: "非数字",
-                dynamicVld:true
-                //}
-                // limiter: {
-                //     wrapper: "#limiter_email",
-                //     max: 20
-                // }
+                dynamicVld:true,
             // }, {
             //     field: $("#phone"),
             //     rule: "phone&required",
@@ -162,15 +162,25 @@ define(function(require,exports,module){
                 left: 5,
             },
             timer:false,
-            parent:$(".outer").first()
+            parent:$(".outer").first(),
+            //revisedVal:true
         });
 
         $("#submit").bind("click", function() {
+            vld.revise();
             vld.validateAll();
             if (!vld.isPassed()) {
                 return;
             }
             alert("通过检验!");
+        });
+
+        $("#vldOne").bind("click",function(){
+            var result = vld.validateOne(0);
+            if(result.passed){
+                alert("passed");
+            }
+            console.log(result);
         });
 
         $("#submit").bind("click", function() {
