@@ -4,7 +4,6 @@ function defineValidator(window,$,VldRulesLib){
      *@author：maxiupeng
      *@date:2013-8-1
      */
-
     var Util = {};
 
     /* 获取光标位置 */
@@ -59,12 +58,7 @@ function defineValidator(window,$,VldRulesLib){
     Util.getElmLoc = function($el) {
         var result = {};
         var elm = $el;
-        // result["left"] = elm[0].offsetLeft;
-        // result["top"] = elm[0].offsetTop;
-        // result["width"] = elm[0].offsetWidth;
-        // result["height"] = elm[0].offsetHeight;
 
-        //通过jQuery获取的有问题,宽度4个像素偏差，高度6个像素偏差
         result["left"] = elm.offset().left;
         result["top"] = elm.offset().top;
         result["width"] = elm.width()+4;
@@ -151,17 +145,6 @@ function defineValidator(window,$,VldRulesLib){
                 return false;
             self.options.tpl = self.options.defaultTpl;
             self.count();
-            self.setTrigger("keydown blur paste input");
-        },
-
-        setTrigger:function(events){
-            var self = this;
-            self.$target = this.$target;
-            self.$target.on(events, function(ev) {
-                setTimeout(function(){
-                    self.count();
-                },110);
-            });
         },
 
         setOptions: function(options) {
@@ -489,17 +472,15 @@ function defineValidator(window,$,VldRulesLib){
                     vld: validations[i]
                 }, function(e){
                     me._check(e.data.vld);
+                    if(me.textLimiter){
+                        me.textLimiter.count();
+                    }
                 });
-            }
-
-            /* 设置光标位置记录器 */
-            if(!opts.autoRevise){
-                me._initPosition(validations[i]);
             }
         }
         
-        /* 设置定时器和动态验证 */
-        if (opts.timer) {
+        /* 使用定时器还是事件绑定 */
+        if (opts.timer) { //使用定时器
             //动态验证的定时器
             if (dynamicVlds.length != 0) {
                 setInterval(function() {
@@ -524,61 +505,93 @@ function defineValidator(window,$,VldRulesLib){
                     }
                 }, CHECK_INTERVAL);
             }
-        } else { //keydown和paste代替timer
-            //动态验证
+
+            /* limiter更新 */
             for (var i = 0; i < validations.length; i++) {
-                if (validations[i].dynamicVld) {
-                    me._initDynamicVld(validations[i]);
+                if (validations[i].textLimiter) {
+                    validations[i].$el.on("keydown, paste, blur, input", function(){
+                        validations[i].textLimiter.count();
+                    })
                 }
             }
-            //出错时检验在error()中设置
+        } else { //使用事件绑定
+            for (var i = 0; i < validations.length; i++) {
+                if($.browser.msie){
+                    //绑定keydown事件
+                    validations[i].$el.on("keydown", {vld:validations[i]}, function(e){
+                        setTimeout(function(){
+                            var vld = e.data.vld;
+
+                            //设置光标位置记录器
+                            vld.oldPosition = Util.getCursorPosition(vld.$el);
+
+                            //设置动态验证
+                            if(vld.dynamicVld){
+                                me._dynamicCheck(e.data.vld);
+                            }
+
+                            //出错后检验
+                            if(opts.checkOnError && vld.onError){
+                                me.validate(vld);
+                            }
+
+                            //更新limiter
+                            if(vld.textLimiter){
+                                vld.textLimiter.count();
+                            }
+                        },0);
+                    });
+                } else {
+                    //绑定input事件
+                    validations[i].$el.on("input", {vld:validations[i]}, function(e){
+                        setTimeout(function(){
+                            var vld = e.data.vld;
+
+                            //设置光标位置记录器
+                            vld.oldPosition = Util.getCursorPosition(vld.$el);
+
+                            //设置动态验证
+                            if(vld.dynamicVld){
+                                me._dynamicCheck(e.data.vld);
+                            }
+
+                            //出错后检验
+                            if(opts.checkOnError && vld.onError){
+                                me.validate(vld);
+                            }
+
+                            //更新limiter
+                            if(vld.textLimiter){
+                                vld.textLimiter.count();
+                            }
+                        },0);
+                    });
+                }
+
+                //绑定paste事件
+                validations[i].$el.on("paste", {vld:validations[i]}, function(e){
+                    setTimeout(function(){
+                        var vld = e.data.vld;
+
+                        //设置动态验证
+                        if(vld.dynamicVld){
+                            me._dynamicCheck(e.data.vld);
+                        }
+
+                        //出错后检验
+                        if(opts.checkOnError && vld.onError){
+                            me.validate(vld);
+                        }
+
+                        //更新limiter
+                        if(vld.textLimiter){
+                            vld.textLimiter.count();
+                        }
+                    },0);
+                });
+            }
         }     
     };
-
-    /*
-     * 初始化动态验证
-     */
-    Validator.prototype._initDynamicVld = function(vld){
-        var me = this;
-        if($.browser.msie){//IE
-            vld.$el.on("keydown", {vld: vld}, function(e) {
-                setTimeout(function() {
-                    me._dynamicCheck(e.data.vld);
-                }, 0);
-            });
-        } else {//非IE
-            vld.$el.on("input", {vld: vld}, function(e) {
-                setTimeout(function() {
-                    me._dynamicCheck(e.data.vld);
-                }, 0);
-            }); 
-        }
-        vld.$el.on("paste", {vld: vld}, function(e){
-            setTimeout(function(){
-                me._dynamicCheck(e.data.vld);
-            }, 0);
-        });
-    };
-
-    /* 
-     * 设置光标位置记录器
-     */
-    Validator.prototype._initPosition = function(vld){
-        var me = this;
-        if($.browser.msie){//IE
-            vld.$el.on("keydown", {vld: vld}, function(e) {
-                setTimeout(function() {
-                    vld.oldPosition = Util.getCursorPosition(vld.$el);
-                }, 0);
-            });
-        } else {//非IE
-            vld.$el.on("input", {vld: vld}, function(e) {
-                setTimeout(function() {
-                    vld.oldPosition = Util.getCursorPosition(vld.$el);
-                }, 0);
-            }); 
-        }
-    }
 
     /*
      * 动态验证,方便callee识别
@@ -588,7 +601,7 @@ function defineValidator(window,$,VldRulesLib){
     };
 
     /*
-     * 用于绑定单个input的blur、change事件
+     * 用于绑定单个input的blur事件
      */
 
     Validator.prototype._check = function(vld) {
@@ -792,7 +805,7 @@ function defineValidator(window,$,VldRulesLib){
             var offsetLeft = validation.tipOffset && validation.tipOffset.left ? validation.tipOffset.left : 0;
             var offsetTop = validation.tipOffset && validation.tipOffset.top ? validation.tipOffset.top : 0;
             var tipDir = validation.tipDir;
-                                                            
+
             //动态验证设置input值
             if(dynamic){
                 if(opts.autoRevise){ //使用revisedVal的值进行替换
@@ -825,24 +838,6 @@ function defineValidator(window,$,VldRulesLib){
                 }
             } 
             $el.addClass(opts.errorClass);
-
-            //出错后检验
-            if(opts.checkOnError && !opts.timer && !validation.binded){
-                validation.binded = true;
-                if($.browser.msie){//IE
-                    $el.on("keydown paste", {vld: validation}, function(e) {
-                        setTimeout(function() {
-                            me.validate(e.data.vld);
-                        }, 0);
-                    });
-                } else {//非IE
-                    $el.on("input paste", {vld: validation}, function(e) {
-                        setTimeout(function() {
-                            me.validate(e.data.vld);
-                        }, 0);
-                    });
-                }
-            }
 
             if ((tipDir && tipDir != "none") || (opts.tipDir && opts.tipDir != "none")) {
                 if(validation.errTipSet){
@@ -926,14 +921,14 @@ function defineValidator(window,$,VldRulesLib){
     };
 }
 
-if(typeof define == "function"){
-    define("Validator",function(require,exports,module){
+if (typeof define == "function") {
+    define("Validator", function(require, exports, module) {
         require("jquery");
         require("VldRulesLib");
-        defineValidator(window,$,VldRulesLib);
+        defineValidator(window, jQuery, VldRulesLib);
         module.exports = Validator;
     });
 } else {
-    defineValidator(window,$,VldRulesLib);
+    defineValidator(window, jQuery, VldRulesLib);
 }
 

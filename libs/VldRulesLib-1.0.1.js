@@ -19,18 +19,14 @@ function defineVldRulesLib(window){
     VldRulesLib.RULES = {};
 
     /* 扩展规则 */
-    VldRulesLib.extend = function(ruleName, needArgs, check, revise) {
+    VldRulesLib.extend = function(ruleName, check, revise) {
         if (!check) {
             throw new Error("扩展规则错误，至少需要包含check方法");
         }
-        if(needArgs){
-            VldRulesLib.RULES[ruleName] = function(args){
-                return VldRulesLib.getRuleStr(ruleName,args);
-            };
-        } else {
-            VldRulesLib.RULES[ruleName] = ruleName;
-        }
-        VldRulesLib.rules[ruleName] = {
+        VldRulesLib.RULES[ruleName.toLowerCase()] = function(args){
+            return VldRulesLib.getRuleStr(ruleName,args);
+        };
+        VldRulesLib.rules[ruleName.toLowerCase()] = {
             check: check,
             revise: revise
         }
@@ -46,13 +42,13 @@ function defineVldRulesLib(window){
     }
 
     /* 必填 */
-    VldRulesLib.extend("required",false,/.+/);
+    VldRulesLib.extend("required", /.+/);
 
     /* email */
-    VldRulesLib.extend("email",false,/^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+$/);
+    VldRulesLib.extend("email", /^[a-zA-Z0-9_-]+@[a-zA-Z0-9_-]+(\.[a-zA-Z0-9_-]+)+$/);
 
     /* 数字,参数为小数位数 */
-    VldRulesLib.extend("number", true, function(value, args) {
+    VldRulesLib.extend("number", function(value, args) {
         if (args && typeof parseInt(args) == 'number') {
             return (new RegExp("^-?[\\d]*(\\.[\\d]{0," + args + "})?$")).test(value);
         }
@@ -83,27 +79,48 @@ function defineVldRulesLib(window){
     });
 
     /* 最小长度 */
-    VldRulesLib.extend("min", true, function(value, args) {
+    VldRulesLib.extend("min", function(value, args) {
         if (!args) {
             throw new Error("参数错误!");
             return false;
         }
-        return value.length >= args ? true : false;
+        return value.length >= args;
     });
 
     /* 最大长度 */
-    VldRulesLib.extend("max", true, function(value, args) {
+    VldRulesLib.extend("max", function(value, args) {
         if (!args) {
             throw new Error("参数错误!");
             return false;
         }
-        return value.length <= args ? true : false;
+        return value.length <= args;
     }, function(value, args) {
         return value.substr(0, args);
     });
 
+    /* 最大长度,以字节为单位进行计算 */
+    VldRulesLib.extend("maxBytes", function(value,args){
+        var len = value.length;
+        value.replace(/[\u0080-\ufff0]/g, function() {
+            len++;
+        });
+        return len <= args;
+    },function(value,args){
+        var result = [];
+        for(var i = 0; i < args; i++){
+            if(/[\u0080-\ufff0]/.test(value.charAt(i))){
+                if(i + 1 >= args){
+                    break;
+                }
+                args = args - 1;
+            }
+            result.push(value.charAt(i));
+        }
+        return result.join("");
+    });
+
     /* 小于 */
-    VldRulesLib.extend("lt", true, function(value, args) {
+    VldRulesLib.extend("lt", function(value, args) {
         if (!VldRulesLib.validate(value, ["number"]).passed || !VldRulesLib.validate(args, ["number"]).passed) {
             return false;
         }
@@ -111,7 +128,7 @@ function defineVldRulesLib(window){
     }, VldRulesLib.rules.number.revise);
 
     /* 大于 */
-    VldRulesLib.extend("gt", true, function(value, args) {
+    VldRulesLib.extend("gt", function(value, args) {
         if (!VldRulesLib.validate(value, ["number"]).passed || !VldRulesLib.validate(args, ["number"]).passed) {
             return false;
         }
@@ -124,7 +141,7 @@ function defineVldRulesLib(window){
     });
     
     /* 小于等于 */
-    VldRulesLib.extend("le", true, function(value, args) {
+    VldRulesLib.extend("le", function(value, args) {
         if (!VldRulesLib.validate(value, ["number"]).passed || !VldRulesLib.validate(args, ["number"]).passed) {
             return false;
         }
@@ -138,7 +155,7 @@ function defineVldRulesLib(window){
     });
     
     /* 大于等于 */
-    VldRulesLib.extend("ge", true, function(value, args) {
+    VldRulesLib.extend("ge", function(value, args) {
         if (!VldRulesLib.validate(value, ["number"]).passed || !VldRulesLib.validate(args, ["number"]).passed) {
             return false;
         }
@@ -151,7 +168,7 @@ function defineVldRulesLib(window){
     });
 
     /* 等于 */
-    VldRulesLib.extend("equal", true, function(value, args) {
+    VldRulesLib.extend("equal", function(value, args) {
         if (!VldRulesLib.validate(value, ["number"]).passed || !VldRulesLib.validate(args, ["number"]).passed) {
             return false;
         }
@@ -159,24 +176,24 @@ function defineVldRulesLib(window){
     });
 
     /* 字符串等于 */
-    VldRulesLib.extend("strEqual", true, function(value, args) {
+    VldRulesLib.extend("strEqual", function(value, args) {
         return value.toString() == args.toString() ? true : false;
     });
     
     /* 座机电话号码 */
-    VldRulesLib.extend("phone", false,
+    VldRulesLib.extend("phone", 
         /^((\(\d{2,3}\))|(\d{3}\-))?(\(0\d{2,3}\)|0\d{2,3}-)?[1-9]\d{6,7}(\-\d{1,4})?$/,
         function(value) {
             return value.replace(/[^0-9\-\(\)\s]/ig, "");
         });
 
     /* 手机号码 */
-    VldRulesLib.extend("mobile", false, /^((\(\d{2,3}\))|(\d{3}\-))?1\d{10}$/, function(value) {
+    VldRulesLib.extend("mobile", /^((\(\d{2,3}\))|(\d{3}\-))?1\d{10}$/, function(value) {
         return value.replace(/[^0-9\-\s\(\)]/ig, "");
     });
 
     /* url,参数为协议名,如http,多个协议用|连接.为空表示不限 */
-    VldRulesLib.extend("url", true, function(value, args) {
+    VldRulesLib.extend("url", function(value, args) {
         var pro = args ? args + "://" : "([a-z]{0,5}://)?";
         var regStr = '^' + pro + '(([0-9a-z_!~*\'().&=+$%-]+: )?[0-9a-z_!~*\'().&=+$%-]+@)?' //ftp的user@
         + '(([0-9]{1,3}.){3}[0-9]{1,3}' // IP形式的URL- 199.194.52.184
@@ -191,17 +208,17 @@ function defineVldRulesLib(window){
     });
 
     /* 数字字母 */
-    VldRulesLib.extend("alphanumeric", false, /^[A-Za-z0-9]*$/, function(value) {
+    VldRulesLib.extend("alphanumeric", /^[A-Za-z0-9]*$/, function(value) {
         return value.replace(/[^a-zA-Z0-9]/ig, "");
     });
 
     /* 数字字母下划线 */
-    VldRulesLib.extend("alphanumeric_underline", false, /^[a-zA-Z0-9_]*$/, function(value) {
+    VldRulesLib.extend("alphanumeric_underline", /^[a-zA-Z0-9_]*$/, function(value) {
         return value.replace(/[^a-zA-Z0-9_]/ig, "");
     });
 
     /* 整型数字,参数为数字位数 */
-    VldRulesLib.extend("num_int", true, function(value, args) {
+    VldRulesLib.extend("num_int", function(value, args) {
         if (args) {
             regStr = "^-?[\\d]{0," + args + "}$";
         } else {
@@ -227,7 +244,7 @@ function defineVldRulesLib(window){
     });
 
     /* 小数数字,参数为小数位数 */
-    VldRulesLib.extend("num_float", true, function(value, args) {
+    VldRulesLib.extend("num_float", function(value, args) {
         if (args) {
             regStr = "^-?[\\d]*\\.[\\d]{0," + args + "}$";
         } else {
@@ -253,14 +270,14 @@ function defineVldRulesLib(window){
     });
 
     /* 一级密码,包含字母,数字 */
-    VldRulesLib.extend("pwdl1", false, function(value) {
+    VldRulesLib.extend("pwdl1", function(value) {
         var re1 = /[a-zA-Z]+/g;
         var re2 = /[0-9]+/g;
         return re1.test(value) && re2.test(value);
     });
 
     /* 二级密码,包含大小写字母,数字 */
-    VldRulesLib.extend("pwdl2", false, function(value) {
+    VldRulesLib.extend("pwdl2", function(value) {
         var re1 = /[a-z]+/g;
         var re2 = /[A-Z]+/g;
         var re3 = /[0-9]+/g;
@@ -268,7 +285,7 @@ function defineVldRulesLib(window){
     });
 
     /* 三级密码,包含大小写字母,数字,符号 */
-    VldRulesLib.extend("pwdl3", false, function(value) {
+    VldRulesLib.extend("pwdl3", function(value) {
         var re1 = /[a-z]+/g;
         var re2 = /[A-Z]+/g;
         var re3 = /[0-9]+/g;
@@ -277,29 +294,29 @@ function defineVldRulesLib(window){
     });
 
     /* 是否只包含单一空格,revise将多个连续空格合并成一个 */
-    VldRulesLib.extend("singlespace", false, function(value) {
+    VldRulesLib.extend("singlespace", function(value) {
         return !/[\s]{2,}/g.test(value);
     }, function(value) {
         return value.replace(/[\s]{2,}/g, " ");
     });
 
     /* 纯字母 */
-    VldRulesLib.extend("alpha", false, /^[A-Za-z]*$/, function(value) {
+    VldRulesLib.extend("alpha", /^[A-Za-z]*$/, function(value) {
         return value.replace(/[^A-Za-z]/ig, "");
     });
 
     /* 字母下划线 */
-    VldRulesLib.extend("alpha_underline", false, /^[A-Za-z_]*$/, function(value) {
+    VldRulesLib.extend("alpha_underline", /^[A-Za-z_]*$/, function(value) {
         return value.replace(/[^A-Za-z_]/ig, "");
     });
 
     /* 身份证号码 */
-    VldRulesLib.extend("idcard", false, /(^\d{15}$)|(^\d{17}([0-9]|X|x)$)/, function(value) {
+    VldRulesLib.extend("idcard", /(^\d{15}$)|(^\d{17}([0-9]|X|x)$)/, function(value) {
         return value.replace(/[^\dXx]/g);
     });
 
     /* 日期 */
-    VldRulesLib.extend("date", false, 
+    VldRulesLib.extend("date",  
         /^\d{4}\-[01]?\d\-[0-3]?\d$|^[01]\d\/[0-3]\d\/\d{4}$|^\d{4}年[01]?\d月[0-3]?\d[日号]$/);
 
     /*
@@ -312,7 +329,7 @@ function defineVldRulesLib(window){
      * noBlankHead:不允许每行首位空白
      * noBlankRear:不允许每行末尾空白
      */
-    VldRulesLib.extend("textarea", true, function(value, args) {
+    VldRulesLib.extend("textarea", function(value, args) {
         var lines = value.match(/(.*\n)|(.*[^\n].*$)/g);
         var cached = {};
         var maxLength = -1;
@@ -403,7 +420,7 @@ function defineVldRulesLib(window){
     });
     
     /* 繁简转换 */
-    VldRulesLib.extend("trad2simp", false, function(value) {
+    VldRulesLib.extend("trad2simp", function(value) {
         for (var i = 0; i < value.length; i++) {
             var charIndex = TRADITIONAL_CHAR.indexOf(value.charAt(i));
             if (charIndex != -1) {
@@ -424,7 +441,40 @@ function defineVldRulesLib(window){
         return newVal.join("");
     });
 
-    /* 验证 */
+    /* regexp */
+    VldRulesLib.extend("regexp", function(value,args){
+        var reg = new RegExp(args);
+        return reg.test(value);
+    });
+
+    /* refuse */
+    VldRulesLib.extend("refuse", function(value,args){
+        var reg = new RegExp(args,"g");
+        return !reg.test(value);
+    }, function(value,args){
+        var reg = new RegExp(args,"g");
+        return value.replace(reg,"");
+    });
+
+    /* replace */
+    VldRulesLib.extend("replace", function(value,args){
+        var dArgs = /^([\s\S]*?)(\]\[([\s\S]*))?$/.exec(args);
+        var arg1 = dArgs[1];
+        var arg2 = dArgs[3];
+        var reg = new RegExp(arg1,"g");
+        return !reg.test(value);
+    }, function(value,args){
+        var dArgs = /^([\s\S]*?)(\]\[([\s\S]*))?$/.exec(args);
+        var arg1 = dArgs[1];
+        var arg2 = dArgs[3];
+        var reg = new RegExp(arg1,"g");
+        return value.replace(reg,arg2);
+    });
+
+    /* 验证
+     * @param value {string} 待验证数据
+     * @param rule  {array}  规则数组,每个元素是规则字符串
+     */
     VldRulesLib.validate = function(value, rule) {
         var rules = VldRulesLib._parseRule(rule);
         var details = []; //记录每个规则的返回结果
