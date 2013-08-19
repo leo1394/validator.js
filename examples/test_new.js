@@ -63,6 +63,16 @@ define(function(require,exports,module){
                 rule:["required","number[2]"],
                 msg: "非数字",
                 dynamicVld:true,
+            },{
+                field: "#refuse",
+                rule: ["refuse[[a-zA-Z0-9.,:!@#$%^&*()\\\\\'\"]]","required"],
+                msg: "必须填入指定字符",
+                dynamicVld: true
+            }, {
+                field: "#replace",
+                rule: ["replace[[a-zA-Z0-9.,:!@#$%^&()\\\\\'\"]][*]","required"],
+                msg: "不能填入非法字符，且不能为空",
+                dynamicVld: true
             // }, {
             //     field: $("#phone"),
             //     rule: "phone&required",
@@ -163,7 +173,7 @@ define(function(require,exports,module){
             },
             timer:false,
             parent:$(".outer").first(),
-            //revisedVal:true
+            autoRevise: true
         });
 
         $("#submit").bind("click", function() {

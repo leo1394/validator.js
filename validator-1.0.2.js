@@ -125,7 +125,6 @@ function defineValidator(window,$,VldRulesLib){
     };
 
     /* Limiter定义 */
-    var EMPTY = "";
     function Limiter(target, options) {
         var self = this;
         self.options = $.extend({}, Limiter.prototype.defaults, options);
@@ -253,7 +252,7 @@ function defineValidator(window,$,VldRulesLib){
                     if (match.charAt(0) === '\\') {
                         return match.slice(1);
                     }
-                    return (o[name] === undefined) ? EMPTY : o[name];
+                    return (o[name] === undefined) ? "" : o[name];
                 });
             }
             html = substitute(tpl, {
@@ -851,7 +850,6 @@ function defineValidator(window,$,VldRulesLib){
 
             me._showInErrorField();
         }
-
     };
 
     /*

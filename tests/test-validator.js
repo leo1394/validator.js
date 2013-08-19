@@ -113,16 +113,16 @@ define(function(require,exports,model){
             rule: ["required","ge[-100]"],
             msg: "必须大于等于-100",
             dynamicVld: true
-        // }, {
-        //     field: "only",
-        //     rule: ["only[a-zA-Z0-9.,:!@#$%^&*()\\\'\"]","required"],
-        //     msg: "必须填入指定字符",
-        //     dynamicVld: true
-        // }, {
-        //     field: "exclude",
-        //     rule: ["exclude[a-zA-Z0-9.,:!@#$%^&*()\\\'\"]","required"],
-        //     msg: "不能填入非法字符，且不能为空",
-        //     dynamicVld: true
+        }, {
+            field: "#refuse",
+            rule: ["refuse[[a-zA-Z0-9.,:!@#$%^&*()\\\\\'\"]]","required"],
+            msg: "必须填入指定字符",
+            dynamicVld: true
+        }, {
+            field: "#replace",
+            rule: ["replace[[a-zA-Z0-9.,:!@#$%^&()\\\\\'\"]][*]","required"],
+            msg: "不能填入非法字符，且不能为空",
+            dynamicVld: true
         }, {
             field: "#trad2simp",
             rule: ["trad2simp","required"],
@@ -351,13 +351,13 @@ define(function(require,exports,model){
         testStyleVal("非法字符,数值正确", false, "-99AAAA!@#$^&*", "-99");
         testStyleVal("相等", false, "-100", "-100");
 
-        //include
-        // init("include");
-        // testStyleVal("非法字符", false, "abcdefg1234567!@#$%^&<>?", "abcdefg1234567!@#$%^&");
+        //refuse
+        init("refuse");
+        testStyleVal("非法字符", false, "abcdefg1234567!@#$%^&<>\\?", "<>?");
 
-        // //exclude
-        // init("exclude");
-        // testStyleVal("非法字符", false, "abcdefg1234567!@#$%^&<>?", "<>?");
+        //replace
+        init("replace");
+        testStyleVal("非法字符", false, "abcdefg1234567!@#$%^&\\<>?", "**********************<>?");
 
         //trad2simp
         init("trad2simp");
