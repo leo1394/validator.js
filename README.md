@@ -1,206 +1,178 @@
-Introduction for Validator.js
-================================
-Last updated:7/9/2013 by RocShow
+#Introduction to Validator.js
+Last updated:8/20/2013 by Maxiupeng(RocShow)
 
-Dependence Libraries:jQuery, Mustache, limiter.js, VldRulesLib.js
+Dependence Libraries:
 
-A.Validate in the form of Array.
--------------------------
+jQuery
+
+VldRulesLib.js https://github.com/RocShow/VldRulesLib
+
+##Brief Introduction
+Just as its name implies, Validator.js wraps some common functions used for validating user input. Aimming at simple using, Validator.js provide some clear and simple interfaces.
+
+##Features
+1. Dynamically Validating. Listen to users' input on real-time and dynamically validate.
+
+2. AUtomatically Revising. Revise error input reasonably according to different validation rules.
+
+3. Switching between timer and event binding. User can choose time or event handler to trigger validation.
+
+4. Detailed Validation Results Exhibition. For the condition of multi validation rules, detailed results of each validation rule will be returned. 
+
+5. Thirty-one kinds of integrated rules. 
+
+6. Allowing extend new rules
+
+7. Receiving custom functions or regular expressions as validation rules.
+
+##How to use
 An example of traditional usage is as following:
 ```js
-	$(function() {
-		vld=new $.Validator([{
-				field: "text1",
-				rule: "required",
-				msg: "This field is required.",
-			}, {
-				field: "text2",
-				rule: "min[3]&max[10]",
-				msg: "The length of your input must be between(including) 3 and 10(including)",
-				tipOffset: {
-					left: 50,
-				},
-				limiter: {
-					wrapper: "#limiter_text2",
-					max: 10
-				}
-			}
-		], {
-			vldOnclick: "submit",
-			vldOnBlur: true,
-			vldOnEnter: true,
-			errorField: "errField",
-			errorClass: "error",
-			tipDir: "right",
-			tipOffset: {
-				left: 5,
-			}
-		});
-
-		vld.start();
-	});
+vld = new Validator([{
+            field: "#text1",
+            rule: ["required","max[10]"],
+            msg: "This field is required.",
+            tipDir: "left",
+            tipOffset: {
+                left: -50,
+            },
+            dynamicVld: true
+        }, {
+            field: "#text2",
+            rule: ["min[3]","max[10]"],
+            msg: "The input length must be between 3 and 10",
+            tipOffset: {
+                left: 50,
+            },
+            dynamicVld: true
+        }], {
+            vldOnBlur: true,
+            errorField: "#errField",
+            errorClass: "error",
+            tipDir: "right",
+            tipOffset: {
+                left: 5,
+            },
+            timer: false,
+            parent: $(".outer").first(),
+            autoRevise: true
+        });
 ```
 
-Some explanation:
+#### Validator Constructor
 
-1)The constructor of Validator requires two parameters: the first one is an array, which represents the collection of the validation rules, the second one is the an js object, which represents the global settings.
+The constructor of Validator requires two parameters: the first one is an array, which represents the collection of the validation rules, the second one is the an js object, which represents the global settings.
 	
-2)Options for the array, the first parameter.
+#### Options for the array, the first parameter.
 Each element of the array must obey the following format:
 ```js
-	{
-		field: //id of the input which needs to be validated
-		rule: //rule for the validation
-		msg: //error message for false validation
-		tipDir: //location of the error tip, must be one of "up,down,left,right"		
-		tipOffset: {
-			 left: //left offset to the original location of error tip
-			 top: //top offset to the original location of error tip
-		}
-		limiter: {
-			//the settings for limiter.js
-		}
-		dynamicVld: //whether trigger dynamic validation or not
-	}
+{
+    field: '', //input which needs to be validated
+    rule: [], //rule for the validation.Type of Array.Each element must be string and obey this format: ruleName[parameter]
+    msg: '', //error message for false validation
+    tipDir:'', //location of the error tip, must be one of "up,down,left,right"
+    tipOffset: {
+        left: '', //left offset to the original location of error tip
+        top: '' //top offset to the original location of error tip
+    },
+    limiter: {
+        //the settings for limiter.js
+    },
+    dynamicVld: boolean //whether trigger dynamic validation or not
+    
+}
 ```
-Of course you can skip some options. The default value will be used. But you must indicate three fields at least: field, rule, msg.
+Of course you can skip some options. The default value will be used. But you must indicate two fields at least: field and rule.
 	
-3)Options and default value for the second parameter
+#### Options and default value for the second parameter
 ```js
-	{
-		//type：DOM element, indicate a button whose click event will trigger an global validation
-		vldOnclick: null, 
-		//when the input label lose its focus, its own validation will be triggered
-		vldOnBlur: false, 
-		//when user press "Enter" in one input label, its own validation will be triggered
-		vldOnEnter: false, 
-		//id of a DOM element which will show all the error messages 
-		errorFiled: null, 
-		//CSS class name which will be applied to the input label when the validation fails
-		errorClass: "", 
-		//template for error tip
-		errTipTpl: "<div class='errorTip' id='{{id}}' style='z-index:0;position:absolute;'>{{message}}</div>", 
-		//location of the error tip, must be one of "up,down,left,right"	
-		tipDir: "right", 
-		//offset to the original location of error tip, must contains "left" and "top" fields
-		tipOffset: null, 
-		//triggers of global validation
-		trigger: [{
-			elm: "#submit2",
-			event: "mousemove"
-		}
-	}
-```
-Something different from section 3, you can skip all options here, because every field has its default value.
-	
-4)You can call Validator.isPassed() to check whether the validation is passed.
-5)Besides the given events will trigger validations, you can call vld.validateAll() to validate manually.
-	
-B.Validate single input label.
--------------------------
-An example of traditional usage is as following:
-```js
-	$("#sText1").validator({
-        rule: "required",
-        trigger: [{
-                event: "blur"
-            },{
-                elm:"#sSubmit",
-                event: "click"
-            }
-        ],
-        tipOffset:{
-            left:5
-        },
-        msg:"This field is required",
-        errorClass: "error",
-        parent: ".popup"
-    });
-```
-1)validator requires one parameter as validation rule. It should obey the following format:
-```js
-	{
-       rule: //rule for the validation,
-       trigger:[{
-          elm: //id for some DOM element. If omitted, current DOM element will be used.
-          event: //name of event
-       },{
-          //...
-       }],
-       checkOnError: //automatically trigger validation when the validation once failed
-       tipDir: //location of error tip,
-       tipOffset:{
-           top: //top offset to the original location of error tip
-           left: //left offset to the original location of error tip
-       },
-	   dynamicVld: //whether trigger dynamic validation or not
-       errorClass: //CSS class name which will be applied to the input label when the validation fails,
-       errTipTpl: //template for error tip
-       errorLoc: //id of a DOM element which will show the error messages 
-       msg: //error message for false validation
-       parent: //parent jQuery selector. If omitted, body will be used.
-    }
-```
-2)As to some options which are same to all validators, you can set these options in $.fn.validator.defaults. For example:
-```js
-	$.fn.validator.defaults = {
-        tipDir: "right",
-        checkOnError:true,
-        tipOffset: {
-            top: 0,
-            left: 0
-        },
-        errTipTpl: "<div class='errorTip' id='{{id}}' style='z-index:{{zindex}};position:absolute;'>{{message}}</div>",
-        msg: "Wrong input, try again."
-    }
-```
-3)Besides the given events will trigger validations, you can validate manually like this:
-```js
-	var t2 = $("#sText2").validator({
-        rule: "required&min[3]&max[10]",
-        errorClass: "error",
-        parent: ".popup"
-    });
-	t2.check();
-```
-C.Validate in the form of data-pattern
--------------------------
-An example of traditional usage is as following:
-```html
-	<div id="item_email">
-		<label for="dp_email">email:</label>
-		<input type="text" id="dp_email" name="dp_email" data-pattern="required&email"/>
-		<p class="errmsg">Wrong email format.</p>
-	</div>
-```
-```js
-	$.Validator.dpShowErrClass = "showError";
-	$.Validator.dpValidate("item_email");
-```
-1)There are some requirements to HTML to utilize data-pattern method. The object needs to be validated must be an item, which contains an input label and a p label. The item itself is an DIV. The input offer the value for validation, the p show the error message. So the p must be hidden initially.
-	
-2)Before usage, you must assign an CSS class to $.Validator.dpShowErrClass. This variable represents the CSS class that will be applied to the item DIV element when the validation fails. For example, if $.Validator.dpShowErrClass = "shoeError". You should add following information to your CSS file:
-```css
-	.showError .errmsg{
-		display:block;
-	}
-	.showError input{
-		background-color: #FFFFCC;
-		border:1px dotted red;
-	}
-```
-Note: display:block is required. Or the error message won't be seen. 
-	
-3)$.Validator.dpValidate() requires id of DOM element as its parameter.
+{
+    //version code
+    version: "1.0.2", 
 
-4)Some other options:
-```js
-	$.Validator.dpAutoListen = true;//automatically trigger validation when the validation once failed
-	$.Validator.dpInterval = 100;//trigger interval
-```
-5)Note: If you'd like to use rule of "only" and "include", this form is not recommended. Because there maybe escape problem of some character such as ' and ".
+    //when the input label lose its focus, its own validation will be triggered
+    vldOnBlur: false, 
 
-D.Others
--------------------------
-1) Other usage of this lib can be found in example folder.
-2) The rules for validation is as same as VldRulesLib.js. Please check *[here](https://github.com/RocShow/VldRulesLib)*
+    //Once one input field was validated as faulty, it will be checked dynamically. 
+    checkOnError: true, 
+
+    //When there are several faulty inputs fields, the first one will be focused. 
+    focus1stErr:true,
+
+    //Use time or event handler to trigger validation
+    timer: true,
+
+    //id of a DOM element which will show all the error messages 
+    errorFiled: null, 
+
+    //CSS class name which will be applied to the input label when the validation fails
+    errorClass: "", 
+
+    //CSS class name which will be applied to the errorLoc
+    errorLocClass: "", 
+
+    //template for error tip
+    errTipTpl: "<div class='errorTip' style='z-index:10;"
+                + "position:absolute;'>{{message}}</div>",
+
+    //location of the error tip, must be one of "up,down,left,right"
+    tipDir: "right",
+
+    //offset to the original location of error tip, must contains "left" and "top" fields
+    tipOffset: null, 
+
+    //default error msg 
+    defaultMsg: "Error Input.",
+
+    //Parent node of the input fields of validations
+    parent: "body", 
+
+    //For the dynamic validations, use the revised value or last value to replace the wrong value. If this option is set as true, revised value will be used, otherwise, last value will be used.
+    //Notice: last value may not be correct as well.
+    autoRevise: false
+}
+```
+You can skip all options here, because every field has its default value.
+
+By calling `vld.isPassed()` to check whether all the validations are passed.
+
+By calling `vld,results()` to get the detailed results.
+
+By calling `vld.revise()` to manually revise.
+
+Besides timer and event can trigger validation, validation can be called by calling `vld.validateAll()` or `vld.validateOne(index)`.
+
+## API
+
+####window.ValidatorDefaults(opts)
+@param opts string
+
+Global settings
+
+####window.Validator(validations,opts)
+
+As described previously
+
+####Validator.results()
+@return [] detailed validation results
+
+####Validator.isPassed()
+@return boolean whether all validations are passed or not
+
+####Validator.validateAll()
+@return boolean whether all validations are passed or not
+
+trigger all validations manually
+
+####Validator.revise()
+@return boolean whether all validations are passed or not after revising
+
+manually revise, then validate all
+
+####Validator.validateOne(index)
+@param index integer index of validation in the set of validations
+
+validate one validation manually, given by index
+
+## validate single input field
+$obj.validator(validation)
