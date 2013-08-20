@@ -3,9 +3,9 @@ Last updated:8/20/2013 by Maxiupeng(RocShow)
 
 Dependence Libraries:
 
-jQuery
+- jQuery
 
-VldRulesLib.js https://github.com/RocShow/VldRulesLib
+- VldRulesLib.js https://github.com/RocShow/VldRulesLib
 
 ##Brief Introduction
 Just as its name implies, Validator.js wraps some common functions used for validating user input. Aimming at simple using, Validator.js provide some clear and simple interfaces.
@@ -144,35 +144,34 @@ Besides timer and event can trigger validation, validation can be called by call
 
 ## API
 
-####window.ValidatorDefaults(opts)
-@param opts string
+####`window.ValidatorDefaults(opts)`
+>@param opts string
 
-Global settings
+>Global settings
 
-####window.Validator(validations,opts)
+####`window.Validator(validations,opts)`
+>As described previously
 
-As described previously
+####`Validator.results()`
+>@return [] detailed validation results
 
-####Validator.results()
-@return [] detailed validation results
+####`Validator.isPassed()`
+>@return boolean whether all validations are passed or not
 
-####Validator.isPassed()
-@return boolean whether all validations are passed or not
+####`Validator.validateAll()`
+>@return boolean whether all validations are passed or not
 
-####Validator.validateAll()
-@return boolean whether all validations are passed or not
+>trigger all validations manually
 
-trigger all validations manually
+####`Validator.revise()`
+>@return boolean whether all validations are passed or not after revising
 
-####Validator.revise()
-@return boolean whether all validations are passed or not after revising
+>manually revise, then validate all
 
-manually revise, then validate all
+####`Validator.validateOne(index)`
+>@param index integer index of validation in the set of validations
 
-####Validator.validateOne(index)
-@param index integer index of validation in the set of validations
-
-validate one validation manually, given by index
+>validate one validation manually, given by index
 
 ## validate single input field
-$obj.validator(validation)
+`$obj.validator(validation)`
