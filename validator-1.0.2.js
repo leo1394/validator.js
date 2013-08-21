@@ -680,7 +680,7 @@ function defineValidator(window,$,VldRulesLib){
         var flag = true;
         for (var i = 0; i < validations.length; i++) {
             var result = this.validate(validations[i]);
-            flag = result == false ? false : flag;
+            flag = result.passed == false ? false : flag;
         }
 
         //第一个错误标签获得焦点
@@ -921,9 +921,9 @@ function defineValidator(window,$,VldRulesLib){
 
 if (typeof define == "function") {
     define("Validator", function(require, exports, module) {
-        require("jquery");
+        var jq = require("jquery") || jQuery;
         require("VldRulesLib");
-        defineValidator(window, jQuery, VldRulesLib);
+        defineValidator(window, jq, VldRulesLib);
         module.exports = Validator;
     });
 } else {

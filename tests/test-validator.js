@@ -139,6 +139,16 @@ define(function(require,exports,model){
             },
             msg: "不满足自定义的函数"
         }, {
+            field: "#chgCase0",
+            rule: ["required","chgCase[0]"],
+            msg: "存在全角字符",
+            dynamicVld: true
+        }, {
+            field: "#chgCase1",
+            rule: ["required","chgCase[1]"],
+            msg: "存在半角字符",
+            dynamicVld: true
+        }, {
             field: "#text",
             rule: ["required","textarea[rows5&length20&noBlankLine&noRepeat&noBlankHead&noBlankRear]"],
             msg: "不满足textarea格式要求",
@@ -372,6 +382,16 @@ define(function(require,exports,model){
         init("custom_func");
         testStyle("失败", true, "word");
         testStyle("通过", false, "test");
+
+        //chgCase0
+        init("chgCase0");
+        testStyle("全角转半角", false, "ＡＢＣａｂｃ　１２３", "ABCabc 123");
+
+        //chgCase1
+        init("chgCase1");
+        testStyle("半角转全角", false, "ABCabc 123", "ＡＢＣａｂｃ　１２３");
+
+
 
         init("text")
         var testValue = "  sogou-inc.com  \n" + " Haidian District \n" + "    \n" + "   \n" + "Beijing\n" + "China\n" + "\n" + "\n" + "Beijing\n" + "\n" + "\n" + "0123456789012345678901234567890\n" + "BIZTECH\n" + "\n";
