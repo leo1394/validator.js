@@ -2,7 +2,7 @@ function defineValidator(window,$,VldRulesLib){
     /*
      *validator.js 表单验证器
      *@author：maxiupeng
-     *@date:2013-8-1
+     *@date:2013-8-27
      */
     var Util = {};
 
@@ -126,11 +126,11 @@ function defineValidator(window,$,VldRulesLib){
 
     /* Limiter定义 */
     function Limiter(target, options) {
-        var self = this;
-        self.options = $.extend({}, Limiter.prototype.defaults, options);
-        self.$target = $(target);
-        self.$wrapper = $(self.options.wrapper);
-        self.render();
+        var me = this;
+        me.options = $.extend({}, Limiter.prototype.defaults, options);
+        me.$target = $(target);
+        me.$wrapper = $(me.options.wrapper);
+        me.render();
     };
 
     Limiter.prototype = {
@@ -138,25 +138,25 @@ function defineValidator(window,$,VldRulesLib){
          * 运行
          */
         render: function() {
-            var self = this;
-            self.$target = this.$target;
-            if (!self.$target)
+            var me = this;
+            me.$target = this.$target;
+            if (!me.$target)
                 return false;
-            self.options.tpl = self.options.defaultTpl;
-            self.count();
+            me.options.tpl = me.options.defaultTpl;
+            me.count();
         },
 
         setOptions: function(options) {
-            var self = this;
-            self.options = $.extend(self.options, options);
-            self.$wrapper = $(self.options.wrapper);
+            var me = this;
+            me.options = $.extend(me.options, options);
+            me.$wrapper = $(me.options.wrapper);
         },
 
         getlen: function() {
-            var self = this;
+            var me = this;
             var trimer = new RegExp("(^[\\s\\t\\xa0\\u3000]+)|([\\u3000\\xa0\\s\\t]+\x24)", "g");
             var trimString = function(source) {
-                var ignore = self.options.ignore;
+                var ignore = me.options.ignore;
                 if (ignore) {
                     for (var i = 0; i < ignore.length; i++) {
                         var rs = [];
@@ -172,12 +172,12 @@ function defineValidator(window,$,VldRulesLib){
             };
             var $target = this.$target;
             var val = trimString($target.val());
-            var trim = self.options.trim;
+            var trim = me.options.trim;
             if (trim && typeof(trim) == 'function') {
                 val = trim(val);
             }
-            var isRejectTag = self.options.isRejectTag;
-            var isEnToCn = self.options.isEnToCn;
+            var isRejectTag = me.options.isRejectTag;
+            var isEnToCn = me.options.isEnToCn;
             //过滤html标签
             if (isRejectTag) val = val.replace(/<[^>]*>/g, "");
             var len = val.length;
@@ -196,37 +196,37 @@ function defineValidator(window,$,VldRulesLib){
          * 字数统计
          */
         count: function() {
-            var self = this;
-            self.$target = this.$target;
-            var len = self.getlen();
-            var max = self.options.max;
-            var defaultTpl = self.options.defaultTpl;
-            var exceedTpl = self.options.exceedTpl;
+            var me = this;
+            me.$target = this.$target;
+            var len = me.getlen();
+            var max = me.options.max;
+            var defaultTpl = me.options.defaultTpl;
+            var exceedTpl = me.options.exceedTpl;
             var tpl = len > max && exceedTpl || defaultTpl;
             //截断处理
-            var isCut = self.options.isCut;
+            var isCut = me.options.isCut;
             if (isCut) {
                 tpl = defaultTpl;
-                self._cutText();
+                me._cutText();
             }
             //设置模板
-            self.options.tpl = tpl;
-            self._create();
+            me.options.tpl = tpl;
+            me._create();
         },
 
         /**
          * 截断文案
          */
         _cutText: function() {
-            var self = this;
-            var isCut = self.options.isCut;
+            var me = this;
+            var isCut = me.options.isCut;
             if (!isCut) return false;
-            var len = self.getlen();
-            var max = self.options.max;
+            var len = me.getlen();
+            var max = me.options.max;
             $target = this.$target;
             if (len > max) {
                 var val = $target.val();
-                while (self.getlen() > max) {
+                while (me.getlen() > max) {
                     val = $target.val();
                     val = val.substr(0, val.length - 1);
                     $target.val(val);
@@ -238,12 +238,12 @@ function defineValidator(window,$,VldRulesLib){
          * 创建字数统计文字
          **/
         _create: function() {
-            var self = this,
+            var me = this,
                 $wrapper = this.$wrapper,
                 $target = this.$target,
-                tpl = self.options.tpl,
-                len = self.getlen(),
-                max = self.options.max,
+                tpl = me.options.tpl,
+                len = me.getlen(),
+                max = me.options.max,
                 html;
             if (!$target.length) return false;
 
@@ -343,23 +343,24 @@ function defineValidator(window,$,VldRulesLib){
 
     /* 默认参数 */
     var defaults = {
-        version: "1.0.1", //版本号
+        version: "1.0.2", //版本号
         vldOnBlur: false, //元素失去焦点时验证
         checkOnError: true, //当前input内的数据不合法时自动验证数据
         focus1stErr:true,//发生错误时第一个错误input获取焦点
-        timer: true, //是否使用定时器验证，若否，使用keydown和onpaste代替
+        timer: true, //是否使用定时器验证，若否，使用事件绑定代替
         errorFiled: null, //集中显示错误信息的区域。
         errorClass: "", //错误时input标签应用的css样式
         errorLocClass: "", //错误时错误提示标签应用的样式，如show
         errTipTpl: "<div class='errorTip' style='z-index:10;"
                     + "position:absolute;'>{{message}}</div>", //错误Tip模板,absolute定位
-        tipDir: "right", //错误tip的显示位置，可选up,down left,right,关闭tip的话设置为false
+        tipDir: "right", //错误tip的显示位置，可选up,down left,right,设置为false可关闭tip
         tipOffset: null, //错误tip显示位置的偏移量，需要包含left和top
         defaultMsg: "输入有误，请重新输入", //默认的错误提示信息
         parent: "body", //父节点$selector,为空的话自动指定为body
         autoRevise: false /* 动态验证时使用修正后的值替换错误值，若为false，
                              则使用上一次保存的值替换错误值。
-                             注:上一次保存的值不一定是正确值
+                             注:上一次保存的值不一定是正确值，
+                             有些错误时没有办法自动修正的，比如email错误
                           */
     }
 
@@ -373,7 +374,7 @@ function defineValidator(window,$,VldRulesLib){
      * @param:validations {array}  应用到当前form中所有field的规则
      *                                 eg:[{
                                        field:'userName',
-                                       rule:'required',
+                                       rule:['required'],
                                        msg:'userName is required!',
                                        errorLoc:'error_username',
                                        dynamicVld:true
@@ -390,12 +391,14 @@ function defineValidator(window,$,VldRulesLib){
         }
             
         var me = this;
+
         me.opts = $.extend(true,{}, defaults, opts);
-        me.dynamicVlds = []; //需要动态验证的validation列表
+
         me.validations = []; //validations的副本
         $.each(validations,function(index,val){
             me.validations.push($.extend(true,{},val));
         });
+
         me._init();
     };
 
@@ -404,10 +407,10 @@ function defineValidator(window,$,VldRulesLib){
      */
     Validator.prototype._init = function() {
         /* 映射实例变量为局部变量 */
-        var me = this;
-        var opts = me.opts;
-        var dynamicVlds = me.dynamicVlds;
-        var validations = me.validations;
+        var me = this,
+            opts = me.opts,
+            dynamicVlds = me.dynamicVlds = [],//需要动态验证的validation列表
+            validations = me.validations;
 
         opts.$errorField = $(opts.errorField);
 
@@ -429,26 +432,25 @@ function defineValidator(window,$,VldRulesLib){
                     children.push(newValidation);
                 });
                 validations[i].children = children;
-                // validations.shift()
-                // opts.deleted.push(validations[i]);
             } else {
                 newValidations.push(validations[i]);
             }
         }
 
-        //originalValidations 与 validations存在映射关系
+        //originalValidations 与 validations存在映射关系,可以互相找到对方
         me.originalValidations = validations; //originalValidations用于最后统计结果
         me.validations = newValidations; //validations用于验证
         validations = me.validations;
 
         /* 设置limiter、passed属性、checked属性、$el、$errorLoc、动态验证、记录光标位置 */
         for (var i = 0; i < validations.length; i++) {
+            /* 是否通过验证 */
             validations[i].passed = true;
 
             /* 记录是否被检验过 */
             validations[i].checked = false;
 
-            /* 设置$el */
+            /* 设置$el,field对应的jQuery对象 */
             validations[i].$el = $(validations[i].field);
 
             /* 设置$errorLoc */
@@ -460,7 +462,7 @@ function defineValidator(window,$,VldRulesLib){
                     ,$.extend(true, {}, defaults.limiter, opts.limiter, validations[i].limiter));
             }
 
-            /* 设置动态验证 */
+            /* 记录是否需要动态验证 */
             if(validations[i].dynamicVld){
                 dynamicVlds.push(validations[i]);
             }
@@ -478,7 +480,7 @@ function defineValidator(window,$,VldRulesLib){
             }
         }
         
-        /* 使用定时器还是事件绑定 */
+        /* 自动触发:使用定时器还是事件绑定 */
         if (opts.timer) { //使用定时器
             //动态验证的定时器
             if (dynamicVlds.length != 0) {
@@ -515,7 +517,7 @@ function defineValidator(window,$,VldRulesLib){
             }
         } else { //使用事件绑定
             for (var i = 0; i < validations.length; i++) {
-                if($.browser.msie){
+                if($.browser.msie){ //IE
                     //绑定keydown事件
                     validations[i].$el.on("keydown", {vld:validations[i]}, function(e){
                         setTimeout(function(){
@@ -600,7 +602,7 @@ function defineValidator(window,$,VldRulesLib){
     };
 
     /*
-     * 用于绑定单个input的blur事件
+     * 单个input的blur事件handler
      */
 
     Validator.prototype._check = function(vld) {
@@ -627,7 +629,7 @@ function defineValidator(window,$,VldRulesLib){
         validations = validations ? validations : this.originalValidations;
         var results = [];
         $.each(validations,function(index,val){
-            if(val.children){
+            if(val.children){ //children为jQuery对象拆分后的子规则
                 var subResults = getResults(val.children);
                 var result = {
                     field: val.field,
@@ -659,7 +661,7 @@ function defineValidator(window,$,VldRulesLib){
      * 验证是否通过
      */
     Validator.prototype.isPassed = function() {
-        if(!this._allChecked()){
+        if(!this._allChecked()){ //确保所有的规则都被至少检验过一次
             throw new Error("存在未被检验过的input，可手动调用validateAll()以保证全部被检验过");
             return null;
         }
@@ -676,8 +678,8 @@ function defineValidator(window,$,VldRulesLib){
      * 验证全部field
      */
     Validator.prototype.validateAll = function() {
-        var validations = this.validations;
-        var flag = true;
+        var validations = this.validations,
+            flag = true;
         for (var i = 0; i < validations.length; i++) {
             var result = this.validate(validations[i]);
             flag = result.passed == false ? false : flag;
@@ -703,17 +705,17 @@ function defineValidator(window,$,VldRulesLib){
 
     Validator.prototype.validate = function(validation) {
         /* 映射实例变量为局部变量 */
-        var me = this;
-        var opts = me.opts;
-        var dynamicVlds = me.dynamicVlds;
-        var validations = me.validations;
-        var msg = validation.msg ? validation.msg : (opts.defaultMsg ? opts.defaultMsg : "");
-        var field = validation.field;
-        var errorLoc = validation.$errorLoc;
-        var $el = validation.$el;
-        var input = validation.$el[0];
-        var value = input.value;
-        var result;
+        var me = this,
+            opts = me.opts,
+            dynamicVlds = me.dynamicVlds,
+            validations = me.validations,
+            msg = validation.msg ? validation.msg : (opts.defaultMsg ? opts.defaultMsg : ""),
+            field = validation.field,
+            errorLoc = validation.$errorLoc,
+            $el = validation.$el,
+            input = validation.$el[0],
+            value = input.value,
+            result;
 
         validation.checked = true;
 
@@ -743,7 +745,7 @@ function defineValidator(window,$,VldRulesLib){
         //普通验证
         var rule = validation.rule;
         var reg = /\[\$\((.+)\)\]/g;
-        if(reg.test(rule)){
+        if(reg.test(rule)){ //如果参数为$选择器，则首先用相应DOM元素的value替换参数
             rule = rule.replace(reg,function(matched,val,index,original){
                 return $(val).val();
             });
@@ -757,7 +759,7 @@ function defineValidator(window,$,VldRulesLib){
         validation.passed = result.passed;
         validation.rules = result.rules;
 
-        //是否动态验证
+        //是否动态验证，便于动态验证和非动态验证分别处理
         var dynamic = arguments.callee.caller == me._dynamicCheck;
         
         if(validation.passed == true){
@@ -782,6 +784,7 @@ function defineValidator(window,$,VldRulesLib){
             //记录最后一次正确的值和光标位置
             validation.oldVal = validation.$el.val();
 
+            //设置errorLoc
             if (errorLoc) {
                 errorLoc.html("");
                 if(opts.errorLocClass){
@@ -790,9 +793,12 @@ function defineValidator(window,$,VldRulesLib){
                     errorLoc.hide();
                 }
             }
+
+            //删除旧的tip
             if(validation.errTipSet){
                 validation.errTipSet.remove();
             }
+
             $el.removeClass(opts.errorClass);
 
             me._showInErrorField();
@@ -826,8 +832,9 @@ function defineValidator(window,$,VldRulesLib){
                 return; //动态验证只涉及到值修正，不涉及样式更改
             }
             
-            validation.onError = true; //在onblur中设置
+            validation.onError = true; //在onblur中取消设置
 
+            //设置errorLoc
             if (errorLoc) {
                 validation.$errorLoc.html(msg);
                 if(opts.errorLocClass){
@@ -838,6 +845,7 @@ function defineValidator(window,$,VldRulesLib){
             } 
             $el.addClass(opts.errorClass);
 
+            //这是tip
             if ((tipDir && tipDir != "none") || (opts.tipDir && opts.tipDir != "none")) {
                 if(validation.errTipSet){
                     validation.errTipSet.remove();
@@ -865,7 +873,7 @@ function defineValidator(window,$,VldRulesLib){
                 }
             }
         });
-        return me.validateAll();
+        return me.validateAll();//修正后再验证一次
     }
 
     /* 
@@ -919,6 +927,7 @@ function defineValidator(window,$,VldRulesLib){
     };
 }
 
+/* seajs封装 */
 if (typeof define == "function") {
     define("Validator", function(require, exports, module) {
         var jq = require("jquery") || jQuery;
