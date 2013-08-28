@@ -17,7 +17,7 @@ function defineValidator(window,$,VldRulesLib){
     };
     Util.getSelectionStart = function($el) {
         if (Util.lengh == 0) return -1;
-        input = $el[0];
+        var input = $el[0];
 
         var pos = input.value.length;
 
