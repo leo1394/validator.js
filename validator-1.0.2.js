@@ -8,15 +8,15 @@ function defineValidator(window,$,VldRulesLib){
 
     /* 获取光标位置 */
     Util.getCursorPosition = function($el) {
-        if ($el.lengh == 0) return -1;
+        if ($el.length == 0) return -1;
         return Util.getSelectionStart($el);
     };
     Util.setCursorPosition = function($el,position) {
-        if ($el.lengh == 0) return $el;
+        if ($el.length == 0) return $el;
         return Util.setSelection($el, position, position);
     };
     Util.getSelectionStart = function($el) {
-        if (Util.lengh == 0) return -1;
+        if (Util.length == 0) return -1;
         var input = $el[0];
 
         var pos = input.value.length;
@@ -33,7 +33,7 @@ function defineValidator(window,$,VldRulesLib){
         return pos;
     };
     Util.setSelection = function($el, selectionStart, selectionEnd) {
-        if ($el.lengh == 0) return $el;
+        if ($el.length == 0) return $el;
         input = $el[0];
 
         if (input.createTextRange) {
