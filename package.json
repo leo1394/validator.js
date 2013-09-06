@@ -1,0 +1,25 @@
+{
+  "name": "validator.js",
+  "version": "1.0.3",
+  "description": "A jQuery Validation Plugin",
+  "homepage": "https://github.com/heatroom/validator.js",
+  "keywords": ["validator"],
+  "author": "Maxiupeng",
+  "engines": {
+    "node": ">= 0.6.0"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "grunt": "~0.4.0",
+    "grunt-contrib-concat": "~0.2.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/heatroom/validator.js"
+  },
+  "bugs": {
+    "url": "https://github.com/heatroom/validator.js/issues"
+  },
+  "main": "./dist/validator.js",
+  "license": "MIT"
+}
