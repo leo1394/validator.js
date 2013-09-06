@@ -1,5 +1,4 @@
 #Introduction to Validator.js
-Last updated:8/20/2013 by Maxiupeng(RocShow)
 
 Dependence Libraries:
 
@@ -8,20 +7,20 @@ Dependence Libraries:
 - VldRulesLib.js https://github.com/RocShow/VldRulesLib
 
 ##Brief Introduction
-Just as its name implies, Validator.js wraps some common functions used for validating user input. Aimming at simple using, Validator.js provide some clear and simple interfaces.
+Just as its name implies, Validator.js wraps some common functions used for validating user input. Aiming at simple using, Validator.js provide some clear and simple interfaces.
 
 ##Features
 1. Dynamically Validating. Listen to users' input on real-time and dynamically validate.
 
-2. AUtomatically Revising. Revise error input reasonably according to different validation rules.
+2. Automatically Revising. Revise error input reasonably according to different validation rules.
 
-3. Switching between timer and event binding. User can choose time or event handler to trigger validation.
+3. Switching between timer and event binding. User can choose timer or event handler to trigger validation.
 
 4. Detailed Validation Results Exhibition. For the condition of multi validation rules, detailed results of each validation rule will be returned. 
 
 5. Thirty-one kinds of integrated rules. 
 
-6. Allowing extend new rules
+6. Allowing extend new rules.
 
 7. Receiving custom functions or regular expressions as validation rules.
 
