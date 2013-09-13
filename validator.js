@@ -160,7 +160,7 @@ function defineValidator(window,$,VldRulesLib){
                 if (ignore) {
                     for (var i = 0; i < ignore.length; i++) {
                         var rs = [];
-                        for (j = 0; j < source.length; j++) {
+                        for (var j = 0; j < source.length; j++) {
                             if (source.charAt(j) !== ignore.charAt(i)) {
                                 rs.push(source.charAt(j));
                             }
