@@ -346,6 +346,7 @@ function defineValidator(window,$,VldRulesLib){
         version: "1.0.2", //版本号
         vldOnBlur: false, //元素失去焦点时验证
         checkOnError: true, //当前input内的数据不合法时自动验证数据
+        dynamicVld: false, //全局配置是否要动态验证规则
         focus1stErr:true,//发生错误时第一个错误input获取焦点
         timer: true, //是否使用定时器验证，若否，使用事件绑定代替
         errorFiled: null, //集中显示错误信息的区域。
@@ -362,6 +363,19 @@ function defineValidator(window,$,VldRulesLib){
                              注:上一次保存的值不一定是正确值，
                              有些错误时没有办法自动修正的，比如email错误
                           */
+    }
+
+    /* 从rule里面获取参数 */
+    var getArgsFromRule=function(rules,rule){
+        if(rules&&rules.length>0){
+           for(var j=0;j<rules.length;j++){
+           	   var result=/^(\w+)(\[([\s\S]+)\])?$/.exec(rules[j]);
+           	   if(result&&result[1].toLowerCase()==rule){
+           	   	  return result[3];
+           	   }
+           }
+        }   
+        return null; 
     }
 
     /* 设置默认参数 */
@@ -456,8 +470,18 @@ function defineValidator(window,$,VldRulesLib){
             /* 设置$errorLoc */
             validations[i].$errorLoc = $(validations[i].errorLoc);
             
+            /* 将opts中的dynamicVld变成所有验证项的 dynamicVld*/
+            if(opts.dynamicVld){
+               validations[i].dynamicVld=true;
+            }
+            
             /* 设置limiter */
             if (validations[i].limiter) {
+                /* 通过rule数组来为limiter的Max属性赋值 */  
+                var max=getArgsFromRule(validations[i].rule,'max');
+                if(max&&!isNaN(max)){
+                   validations[i].limiter.max=max;
+                }                
                 validations[i].textLimiter = new Limiter(validations[i].$el
                     ,$.extend(true, {}, defaults.limiter, opts.limiter, validations[i].limiter));
             }
@@ -510,9 +534,11 @@ function defineValidator(window,$,VldRulesLib){
             /* limiter更新 */
             for (var i = 0; i < validations.length; i++) {
                 if (validations[i].textLimiter) {
-                    validations[i].$el.on("keydown, paste, blur, input", function(){
-                        validations[i].textLimiter.count();
-                    })
+                   (function(i){
+	             validations[i].$el.on("keydown, paste, blur, input", function(){
+	                validations[i].textLimiter.count();
+	             })
+                   })(i);
                 }
             }
         } else { //使用事件绑定
