@@ -169,12 +169,14 @@ Validator.prototype._init = function() {
 
         /* limiter更新 */
         for (var i = 0; i < validations.length; i++) {
-            if (validations[i].textLimiter) {
-                validations[i].$el.on("keydown, paste, blur, input", function(){
-                    validations[i].textLimiter.count();
-                })
-            }
-        }
+               (function(lockedIndex){          
+                   if (validations[i].textLimiter) {               
+                        validations[i].$el.on("keydown, paste, blur, input", function(){
+                                                validations[lockedIndex].textLimiter.count();
+                        });
+                   }
+                 })(i);               
+          }
     } else { //使用事件绑定
         for (var i = 0; i < validations.length; i++) {
             if($.browser.msie){ //IE
